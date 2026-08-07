@@ -69,73 +69,34 @@ export type ZoneId =
 export type Zone = { id: ZoneId; label: string; hint?: string };
 
 /**
- * Direcțiile de lucru, așa cum le-a dat echipa. Grupate doar ca să se scaneze
- * din ochi: 21 de rânduri la rând ar fi un perete.
+ * Direcțiile de lucru, așa cum le-a dat echipa. O singură listă, fără capete de
+ * grup: împărțirea pe departamente ar sugera că bifezi unde ești încadrat, nu de
+ * ce te-ai ocupat efectiv. Ordinea le ține pe cele înrudite una lângă alta.
  */
-export const ZONE_GROUPS: { label: string; zones: Zone[] }[] = [
-  {
-    label: "participanți",
-    zones: [
-      { id: "participanti", label: "Participanți", hint: "trupele, program, repetiții, însoțitori" },
-      { id: "invitati", label: "Invitați", hint: "invitații, program, însoțire, contracte" },
-    ],
-  },
-  {
-    label: "evenimente",
-    zones: [
-      { id: "piata", label: "Piața" },
-      { id: "indoor", label: "Evenimente indoor" },
-      { id: "kaufland", label: "Kaufland" },
-      { id: "ateliere", label: "Ateliere" },
-    ],
-  },
-  {
-    label: "scenografie, tehnic, producție",
-    zones: [
-      { id: "scenografie", label: "Scenografie" },
-      { id: "tehnic_out", label: "Tehnic outdoor" },
-      { id: "tehnic_in", label: "Tehnic indoor" },
-      { id: "productie", label: "Producție" },
-    ],
-  },
-  {
-    label: "welcoming",
-    zones: [
-      { id: "transporturi", label: "Transporturi" },
-      { id: "cazari", label: "Cazări" },
-      { id: "mese", label: "Mese" },
-      { id: "welcomepacks", label: "Welcome packs" },
-      { id: "voluntari", label: "Voluntari" },
-    ],
-  },
-  {
-    label: "comunicare",
-    zones: [
-      { id: "comunicare", label: "Comunicare" },
-      { id: "fotovideo", label: "Foto și video" },
-    ],
-  },
-  {
-    label: "bani",
-    zones: [
-      { id: "sponsori", label: "Sponsori" },
-      { id: "financiar", label: "Financiar" },
-    ],
-  },
-  {
-    label: "digital",
-    zones: [
-      { id: "website", label: "Website" },
-      { id: "ticketing", label: "Ticketing" },
-    ],
-  },
-  {
-    label: "altceva",
-    zones: [{ id: "altele", label: "Altceva", hint: "HQ, punct medical, curățenie, merch, orice altceva" }],
-  },
+export const ZONES: Zone[] = [
+  { id: "participanti", label: "Participanți", hint: "trupele, program, repetiții, însoțitori" },
+  { id: "invitati", label: "Invitați", hint: "invitații, program, însoțire, contracte" },
+  { id: "piata", label: "Piața" },
+  { id: "indoor", label: "Evenimente indoor" },
+  { id: "kaufland", label: "Kaufland" },
+  { id: "ateliere", label: "Ateliere" },
+  { id: "scenografie", label: "Scenografie" },
+  { id: "tehnic_out", label: "Tehnic outdoor" },
+  { id: "tehnic_in", label: "Tehnic indoor" },
+  { id: "productie", label: "Producție" },
+  { id: "transporturi", label: "Transporturi" },
+  { id: "cazari", label: "Cazări" },
+  { id: "mese", label: "Mese" },
+  { id: "welcomepacks", label: "Welcome packs" },
+  { id: "voluntari", label: "Voluntari" },
+  { id: "comunicare", label: "Comunicare" },
+  { id: "fotovideo", label: "Foto și video" },
+  { id: "sponsori", label: "Sponsori" },
+  { id: "financiar", label: "Financiar" },
+  { id: "website", label: "Website" },
+  { id: "ticketing", label: "Ticketing" },
+  { id: "altele", label: "Altceva", hint: "HQ, punct medical, curățenie, merch, orice altceva" },
 ];
-
-export const ZONES: Zone[] = ZONE_GROUPS.flatMap((g) => g.zones);
 
 /** Cele cinci lucruri care decid dacă o direcție a funcționat sau nu. */
 export const DIMENSIONS: { id: string; label: string; hint: string }[] = [

@@ -7,7 +7,6 @@ import {
   MOOD_WORDS,
   SECTIONS,
   ZONES,
-  ZONE_GROUPS,
   fieldCount,
   requiredIds,
   visibleSections,
@@ -55,10 +54,12 @@ describe("direcțiile", () => {
     expect(zoneSections.map((s) => s.id).sort()).toEqual(ZONES.map((z) => z.id).sort());
   });
 
-  it("grupele acoperă toate direcțiile, fără dubluri", () => {
-    const dinGrupe = ZONE_GROUPS.flatMap((g) => g.zones.map((z) => z.id));
-    expect(new Set(dinGrupe).size).toBe(dinGrupe.length);
-    expect(dinGrupe.sort()).toEqual(ZONES.map((z) => z.id).sort());
+  it("lista de bifat e una singură, fără dubluri și fără capete de grup", () => {
+    // Împărțirea pe departamente ar sugera că bifezi unde ești încadrat,
+    // nu de ce te-ai ocupat efectiv.
+    const ids = ZONES.map((z) => z.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ZONES.length).toBe(22);
   });
 
   it("fiecare direcție începe cu aceleași patru întrebări, în aceeași ordine", () => {

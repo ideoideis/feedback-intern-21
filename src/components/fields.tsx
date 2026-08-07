@@ -4,14 +4,7 @@ import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useHearts } from "@/components/Hearts";
-import {
-  DIMENSIONS,
-  DIM_OPTIONS,
-  ZONES,
-  ZONE_GROUPS,
-  type Question,
-  type ZoneId,
-} from "@/data/questions";
+import { DIMENSIONS, DIM_OPTIONS, ZONES, type Question, type ZoneId } from "@/data/questions";
 import {
   CHOICE_REACTIONS,
   HAPPY_CHOICES,
@@ -443,48 +436,44 @@ function ZonePicker({
   };
 
   return (
-    <div className={cn("space-y-5", invalid && "ring-2 ring-primary ring-offset-4")}>
-      {ZONE_GROUPS.map((group) => (
-        <div key={group.label}>
-          <p className="micro-label mb-2">{group.label}</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {group.zones.map((z) => {
-              const active = value.includes(z.id);
-              return (
-                <button
-                  key={z.id}
-                  type="button"
-                  onClick={() => toggle(z.id)}
-                  aria-pressed={active}
-                  className={cn(
-                    "flex items-start gap-3 border p-3 text-left transition-colors",
-                    active ? "border-primary bg-primary/5" : "border-input bg-background hover:border-primary",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 flex h-5 w-5 flex-none items-center justify-center border",
-                      active ? "border-primary bg-primary text-primary-foreground" : "border-input",
-                    )}
-                  >
-                    {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                  </span>
-                  <span>
-                    <span className={cn("block font-semibold leading-tight", active && "text-primary")}>
-                      {z.label}
-                    </span>
-                    {z.hint && (
-                      <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">
-                        {z.hint}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+    <div
+      className={cn(
+        "grid gap-2 sm:grid-cols-2",
+        invalid && "ring-2 ring-primary ring-offset-4",
+      )}
+    >
+      {ZONES.map((z) => {
+        const active = value.includes(z.id);
+        return (
+          <button
+            key={z.id}
+            type="button"
+            onClick={() => toggle(z.id)}
+            aria-pressed={active}
+            className={cn(
+              "flex items-start gap-3 border p-3 text-left transition-colors",
+              active ? "border-primary bg-primary/5" : "border-input bg-background hover:border-primary",
+            )}
+          >
+            <span
+              className={cn(
+                "mt-0.5 flex h-5 w-5 flex-none items-center justify-center border",
+                active ? "border-primary bg-primary text-primary-foreground" : "border-input",
+              )}
+            >
+              {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+            </span>
+            <span>
+              <span className={cn("block font-semibold leading-tight", active && "text-primary")}>
+                {z.label}
+              </span>
+              {z.hint && (
+                <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">{z.hint}</span>
+              )}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
