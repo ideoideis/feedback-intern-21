@@ -238,11 +238,14 @@ const ZONE_SECTIONS: {
   open: { label: string; help?: string };
   /** A doua întrebare deschisă, doar unde chiar e nevoie de două. */
   open2?: { label: string; help?: string };
+  /** Exemplul din câmpul "de schimbat", când cel generic nu spune nimic. */
+  exChange?: string;
 }[] = [
   {
     key: "participanti",
     title: "participanții",
     label: "la relația cu participanții",
+    exChange: "modul de selecție al trupelor",
     open: {
       label: "Ce feedback ai auzit de la trupe și ar trebui luat în considerare?",
       help: "Ce ți-au spus direct sau ce ai prins din discuții: program, repetiții, mâncare, cazare, cum au fost primiți.",
@@ -473,7 +476,8 @@ const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
       help: "Un lucru per rând. Dacă știi și cum, scrie cum.",
       slots: 2,
       accent: "change",
-      placeholder: "ex. programul final cu două săptămâni înainte, nu în ajun",
+      // Exemplul propriu direcției, unde cel generic nu spune nimic.
+      placeholder: `ex. ${z.exChange ?? "programul final cu două săptămâni înainte, nu în ajun"}`,
     },
     { type: "long", id: `${z.key}_context`, label: z.open.label, help: z.open.help },
     ...(z.open2
