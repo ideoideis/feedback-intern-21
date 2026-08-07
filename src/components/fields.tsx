@@ -1,10 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Minus } from "lucide-react";
+import { Check } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useHearts } from "@/components/Hearts";
-import { toast } from "sonner";
-import { ZONES, gridRowsFor, gridRowsRest, type Question, type ZoneId } from "@/data/questions";
+import {
+  DIMENSIONS,
+  DIM_OPTIONS,
+  ZONES,
+  ZONE_GROUPS,
+  type Question,
+  type ZoneId,
+} from "@/data/questions";
 import {
   CHOICE_REACTIONS,
   HAPPY_CHOICES,
@@ -13,7 +20,7 @@ import {
   WORD_REACTIONS,
 } from "@/data/reactions";
 
-export type AnswerValue = string | number | string[] | Record<string, number | "nu">;
+export type AnswerValue = string | number | string[] | Record<string, string>;
 export type Answers = Record<string, AnswerValue>;
 
 /** Rândul mic de reacție care apare sub o întrebare. */
@@ -35,6 +42,13 @@ function Reaction({ text }: { text?: string }) {
     </AnimatePresence>
   );
 }
+
+const inputClass = (invalid?: boolean) =>
+  cn(
+    "w-full border bg-background px-4 py-3 text-base",
+    "placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary",
+    invalid ? "border-primary" : "border-input",
+  );
 
 /** Textarea care crește pe măsură ce scrii, ca să nu apară scroll în cutie. */
 export function AutoTextarea({
@@ -88,13 +102,6 @@ export function AutoTextarea({
     </>
   );
 }
-
-const inputClass = (invalid?: boolean) =>
-  cn(
-    "w-full border bg-background px-4 py-3 text-base",
-    "placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary",
-    invalid ? "border-primary" : "border-input",
-  );
 
 /** Scală 1 la 5, butoane mari (se apasă ușor și pe telefon). */
 function Scale({
@@ -155,17 +162,19 @@ function Choice({
   options,
   value,
   onChange,
+  invalid,
 }: {
   id: string;
   options: string[];
   value: string | undefined;
   onChange: (v: string) => void;
+  invalid?: boolean;
 }) {
   const hearts = useHearts();
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
+      <div className={cn("flex flex-wrap gap-2", invalid && "ring-2 ring-primary ring-offset-4")}>
         {options.map((o) => {
           const active = value === o;
           return (
@@ -316,7 +325,6 @@ function Items({
               "flex w-10 flex-none items-center justify-center border border-r-0 text-sm font-semibold",
               invalid && i === 0 ? "border-primary" : "border-input",
               accent === "keep" && "text-primary",
-              accent === "change" && "text-foreground",
             )}
           >
             {ranked ? i + 1 : accent === "keep" ? "♥" : "›"}
@@ -345,123 +353,79 @@ function Items({
   );
 }
 
-/** Grila cu toate zonele festivalului: notă de la 1 la 5 sau "n-am văzut". */
-function Grid({
+/**
+ * Grila de diagnostic: cele cinci dimensiuni pe trei variante.
+ *
+ * Coloana vertebrală a formularului. Apare identică la fiecare direcție, ca la
+ * final să se poată număra: dacă "informația a lipsit" iese la nouă direcții,
+ * aia e problema ediției, indiferent ce scrie fiecare în text.
+ */
+function Matrix({
   value,
   onChange,
-  low,
-  high,
-  zone,
 }: {
-  value: Record<string, number | "nu">;
-  onChange: (v: Record<string, number | "nu">) => void;
-  low: string;
-  high: string;
-  zone: ZoneId[];
+  value: Record<string, string>;
+  onChange: (v: Record<string, string>) => void;
 }) {
   const hearts = useHearts();
-  const [showAll, setShowAll] = useState(false);
+  const answered = DIMENSIONS.filter((d) => value[d.id]).length;
 
-  // Doar zonele pe care omul a avut cum să le vadă. Cine face foto-video nu are
-  // ce să spună despre tehnicul din Piață, deci nici nu e întrebat.
-  const mine = useMemo(() => gridRowsFor(zone), [zone]);
-  const rest = useMemo(() => gridRowsRest(zone), [zone]);
-  const rows = showAll ? [...mine, ...rest] : mine;
-
-  const answered = rows.filter((r) => value[r.id] !== undefined).length;
-  const complete = answered === rows.length;
-
-  const set = (row: string, v: number | "nu", el: Element) => {
+  const set = (dim: string, opt: string, el: Element) => {
     const next = { ...value };
-    if (next[row] === v) delete next[row];
-    else next[row] = v;
+    if (next[dim] === opt) delete next[dim];
+    else next[dim] = opt;
     onChange(next);
-    if (rows.every((r) => next[r.id] !== undefined)) hearts.burstFrom(el, 10);
+    // Toate cinci "a fost ok" e rar și merită sărbătorit.
+    if (DIMENSIONS.every((d) => next[d.id] === "ok")) hearts.burstFrom(el, 10);
   };
 
   return (
-    <div>
-      {/* Capul de tabel aliniat peste coloane: explică o dată ce e ultima coloană,
-          ca să nu depindă de un rând de text la sfârșit, pe care nu-l citește nimeni. */}
-      <div className="mb-3 flex items-end gap-1.5 text-xs text-muted-foreground">
-        <span className="flex-1">1 = {low}</span>
-        <span className="flex-1 text-right">5 = {high}</span>
-        <span className="w-14 flex-none text-center text-[10px] font-medium leading-tight">
-          n-am
-          <br />
-          văzut
-        </span>
-      </div>
-
-      <div className="space-y-4">
-        {rows.map((row) => {
-          const v = value[row.id];
-          return (
-            <div key={row.id} className="border-t border-border pt-3 first:border-t-0 first:pt-0">
-              <p className={cn("mb-2 font-medium leading-snug", v !== undefined && "text-primary")}>
-                {row.label}
-              </p>
-              <div className="flex gap-1.5">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={(e) => set(row.id, n, e.currentTarget)}
-                    aria-label={`${row.label}: ${n}`}
-                    aria-pressed={v === n}
-                    className={cn(
-                      "h-11 flex-1 border text-base font-semibold transition-colors",
-                      v === n
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background hover:border-primary hover:text-primary",
-                    )}
-                  >
-                    {n}
-                  </button>
-                ))}
+    <div className="space-y-4">
+      {DIMENSIONS.map((d) => (
+        <div key={d.id} className="border-t border-border pt-3 first:border-t-0 first:pt-0">
+          <p className={cn("font-medium leading-snug", value[d.id] && "text-primary")}>{d.label}</p>
+          <p className="mb-2 text-xs text-muted-foreground">{d.hint}</p>
+          <div className="flex gap-1.5">
+            {DIM_OPTIONS.map((o) => {
+              const active = value[d.id] === o.id;
+              return (
                 <button
+                  key={o.id}
                   type="button"
-                  onClick={(e) => set(row.id, "nu", e.currentTarget)}
-                  aria-label={`${row.label}: n-am văzut`}
-                  aria-pressed={v === "nu"}
-                  title="n-am văzut"
+                  onClick={(e) => set(d.id, o.id, e.currentTarget)}
+                  aria-pressed={active}
+                  aria-label={`${d.label}: ${o.label}`}
                   className={cn(
-                    "flex h-11 w-14 flex-none items-center justify-center gap-1 border text-xs transition-colors",
-                    v === "nu"
-                      ? "border-secondary bg-secondary text-secondary-foreground"
-                      : "border-input bg-background text-muted-foreground hover:border-secondary",
+                    "flex-1 border px-1 py-3 text-xs font-semibold transition-colors sm:text-sm",
+                    !active && "border-input bg-background hover:border-primary hover:text-primary",
+                    // Severitatea se vede din culoare: neutru, roșu deschis, roșu plin.
+                    active && o.id === "ok" && "border-secondary bg-secondary text-secondary-foreground",
+                    active && o.id === "muchie" && "border-primary bg-primary/10 text-primary",
+                    active && o.id === "lipsa" && "border-primary bg-primary text-primary-foreground",
                   )}
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  {o.label}
                 </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className={cn("text-xs", complete ? "font-medium text-primary" : "text-muted-foreground")}>
-          {complete ? "notate toate. mulțumim, ești rar/ă." : `${answered} din ${rows.length} notate`}
-        </p>
-
-        {/* Restul zonelor, pentru cine chiar a văzut mai mult decât zona lui. */}
-        {rest.length > 0 && !showAll && (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
-          >
-            arată și celelalte {rest.length} zone
-            <ChevronDown className="h-3.5 w-3.5" />
-          </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <p
+        className={cn(
+          "text-xs",
+          answered === DIMENSIONS.length ? "font-medium text-primary" : "text-muted-foreground",
         )}
-      </div>
+      >
+        {answered === DIMENSIONS.length
+          ? "toate cinci. mulțumim, asta ne ajută cel mai mult."
+          : `${answered} din ${DIMENSIONS.length}`}
+      </p>
     </div>
   );
 }
 
-/** Bifele care decid ce secțiuni urmează. Rânduri-card, nu bife mici. */
+/** Bifele care decid ce secțiuni urmează. Grupate, ca să se scaneze din ochi. */
 function ZonePicker({
   value,
   onChange,
@@ -479,35 +443,48 @@ function ZonePicker({
   };
 
   return (
-    <div className={cn("grid gap-2 sm:grid-cols-2", invalid && "ring-2 ring-primary ring-offset-4")}>
-      {ZONES.map((z) => {
-        const active = value.includes(z.id);
-        return (
-          <button
-            key={z.id}
-            type="button"
-            onClick={() => toggle(z.id)}
-            aria-pressed={active}
-            className={cn(
-              "flex items-start gap-3 border p-4 text-left transition-colors",
-              active ? "border-primary bg-primary/5" : "border-input bg-background hover:border-primary",
-            )}
-          >
-            <span
-              className={cn(
-                "mt-0.5 flex h-5 w-5 flex-none items-center justify-center border",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-input",
-              )}
-            >
-              {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-            </span>
-            <span>
-              <span className={cn("block font-semibold", active && "text-primary")}>{z.label}</span>
-              <span className="mt-0.5 block text-sm text-muted-foreground">{z.hint}</span>
-            </span>
-          </button>
-        );
-      })}
+    <div className={cn("space-y-5", invalid && "ring-2 ring-primary ring-offset-4")}>
+      {ZONE_GROUPS.map((group) => (
+        <div key={group.label}>
+          <p className="micro-label mb-2">{group.label}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {group.zones.map((z) => {
+              const active = value.includes(z.id);
+              return (
+                <button
+                  key={z.id}
+                  type="button"
+                  onClick={() => toggle(z.id)}
+                  aria-pressed={active}
+                  className={cn(
+                    "flex items-start gap-3 border p-3 text-left transition-colors",
+                    active ? "border-primary bg-primary/5" : "border-input bg-background hover:border-primary",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-5 w-5 flex-none items-center justify-center border",
+                      active ? "border-primary bg-primary text-primary-foreground" : "border-input",
+                    )}
+                  >
+                    {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                  </span>
+                  <span>
+                    <span className={cn("block font-semibold leading-tight", active && "text-primary")}>
+                      {z.label}
+                    </span>
+                    {z.hint && (
+                      <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">
+                        {z.hint}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -585,6 +562,7 @@ export function Field({
             options={q.options}
             value={raw as string | undefined}
             onChange={(v) => set(q.id, v)}
+            invalid={!!error}
           />
         )}
 
@@ -610,13 +588,10 @@ export function Field({
           />
         )}
 
-        {q.type === "grid" && (
-          <Grid
-            value={(raw as Record<string, number | "nu">) ?? {}}
+        {q.type === "matrix" && (
+          <Matrix
+            value={(raw as Record<string, string>) ?? {}}
             onChange={(v) => set(q.id, v)}
-            low={q.low}
-            high={q.high}
-            zone={(answers.zone as ZoneId[]) ?? []}
           />
         )}
 
@@ -632,7 +607,7 @@ export function Field({
                 type="text"
                 value={(answers.zone_altele as string) ?? ""}
                 onChange={(e) => set("zone_altele", e.target.value)}
-                placeholder="în ce anume ai fost implicat/ă?"
+                placeholder="de ce anume te-ai ocupat?"
                 className={cn(inputClass(false), "mt-3")}
               />
             )}

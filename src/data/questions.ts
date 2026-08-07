@@ -4,26 +4,27 @@
  * Totul e declarativ: ca să schimbi o întrebare, editezi textul de aici.
  * Pagina (src/pages/Index.tsx) se construiește singură din structura asta.
  *
- * Pentru cine: board, artistic, welcoming, comunicare, tehnic, producție,
- * financiar, website. NU e pentru voluntari, juniori și shtanga boyz, care au
- * nevoie de alt formular, cu alte întrebări.
+ * Pentru cine: echipa mare (board, artistic, welcoming, comunicare, tehnic,
+ * producție, financiar, website). NU pentru voluntari, juniori și shtanga boyz,
+ * care au nevoie de alt formular, cu alte întrebări.
  *
- * Trei decizii care fac diferența față de un Google Form obișnuit:
+ * Cum e construit, și de ce:
  *
- * 1. Nimeni nu e întrebat despre ce nu putea să vadă. Zonele de mai jos sunt
- *    departamentele și direcțiile reale ale festivalului. Fiecare bifează unde a
- *    fost, și de acolo se construiește un formular numai al lui: cine a făcut
- *    foto-video nu primește întrebări despre sunetul de la gale, iar cine a ținut
- *    finanțarea nu e întrebat despre înscrierile la ateliere.
+ * 1. Nimeni nu e întrebat despre ce n-a lucrat. Prima secțiune întreabă de ce
+ *    s-a ocupat fiecare, din direcțiile reale ale festivalului, și pentru fiecare
+ *    bifă primește o secțiune. Cine a făcut foto-video nu vede întrebări despre
+ *    sunetul de la gale.
  *
- * 2. Răspunsuri care se pot număra. Pentru fiecare zonă cerem lucruri scurte și
- *    separate ("de păstrat" / "de schimbat"), la fel formulate în toate zonele.
- *    Zece oameni care scriu fiecare două rânduri scurte dau o listă de
- *    priorități; zece paragrafe dau o lectură plăcută din care nu iese nimic.
+ * 2. Aceleași cinci dimensiuni la fiecare direcție (oameni, timp, informație,
+ *    resurse, decizii). Asta e coloana vertebrală: dacă "informația a lipsit"
+ *    apare la nouă direcții din douăzeci, ai găsit problema ediției fără să
+ *    citești un rând de text. Fără grila asta, întrebările deschise ies ori prea
+ *    generale, ori prea nișate, și răspunsurile nu se pot compara între ele.
  *
- * 3. Scurt, dar cu loc liber. Fiecare zonă are și o întrebare deschisă, iar la
- *    grilă se pot adăuga zonele mici care nu apar în listă. Dacă adaugi o
- *    întrebare nouă, întreabă-te ce tai în schimb.
+ * 3. Fără nume și fără rol obligatoriu. Rolul ar identifica exact o persoană
+ *    ("Coord. Ateliere" e un singur om), deci ar face degeaba numele opțional.
+ *    Rămâne doar departamentul, care e un grup, plus "prefer să nu spun" pentru
+ *    departamentele mici.
  */
 
 /** Departamentele din structura echipei. Pentru filtrat în Excel. */
@@ -38,82 +39,119 @@ export const DEPARTMENTS: string[] = [
   "Website",
 ];
 
+/** Ultima variantă de la departament, pentru cine e singur în departamentul lui. */
+export const DEPARTMENT_PRIVATE = "prefer să nu spun";
+
 export type ZoneId =
-  | "outdoor"
+  | "participanti"
+  | "invitati"
+  | "piata"
   | "indoor"
+  | "kaufland"
   | "ateliere"
-  | "trupe"
-  | "comunitate"
   | "scenografie"
-  | "tehnic"
+  | "tehnic_out"
+  | "tehnic_in"
   | "productie"
+  | "transporturi"
   | "cazari"
-  | "transport"
+  | "mese"
+  | "welcomepacks"
   | "voluntari"
   | "comunicare"
   | "fotovideo"
+  | "sponsori"
   | "financiar"
   | "website"
+  | "ticketing"
   | "altele";
 
-export type Zone = { id: ZoneId; label: string; hint: string };
-
-/** Zonele de lucru reale. Ordinea e cea din bifele primei secțiuni. */
-export const ZONES: Zone[] = [
-  { id: "outdoor", label: "Evenimente outdoor și Piața", hint: "program, standuri, oameni pe teren" },
-  { id: "indoor", label: "Evenimente indoor, gale, spectacole", hint: "săli, public, program de scenă" },
-  { id: "ateliere", label: "Atelierele", hint: "înscrieri, spații, traineri, prezență" },
-  { id: "trupe", label: "Relații participanți și trupe", hint: "program, repetiții, însoțitori, tot ce le-a trebuit" },
-  { id: "comunitate", label: "Dezvoltare comunitară și murale", hint: "orașul, școlile, proiectele cu comunitatea" },
-  { id: "scenografie", label: "Scenografie", hint: "de la desen la montat și demontat" },
-  { id: "tehnic", label: "Tehnic", hint: "sunet, lumini, scenă, regie tehnică" },
-  { id: "productie", label: "Producție și achiziții", hint: "ce s-a cumpărat, cărat, pus la punct" },
-  { id: "cazari", label: "Cazări, mese, welcome packs", hint: "unde dorm și unde mănâncă oamenii" },
-  { id: "transport", label: "Transporturi", hint: "curse, șoferi, orare, mașini" },
-  { id: "voluntari", label: "Voluntari", hint: "recrutare, ture, brief-uri, cine ține de ei" },
-  { id: "comunicare", label: "Comunicare și promovare", hint: "social media, PR, grafică" },
-  { id: "fotovideo", label: "Foto și video", hint: "acoperire, acces, livrare materiale" },
-  { id: "financiar", label: "Finanțări și sponsorizări", hint: "bugete, contracte, ce am promis" },
-  { id: "website", label: "Website și ticketing", hint: "site, înscrieri online, bilete" },
-  { id: "altele", label: "Altceva", hint: "scrie mai jos în ce anume" },
-];
+export type Zone = { id: ZoneId; label: string; hint?: string };
 
 /**
- * Rândurile din grila de note.
- *
- * `always` = ce a trăit oricine din echipă pe pielea lui: a dormit, a mâncat, a
- * văzut trupele, a simțit atmosfera, a primit sau nu instrucțiuni clare. Restul
- * apar doar la cine a bifat zona potrivită, plus sub butonul "arată și celelalte
- * zone" pentru cine chiar a văzut mai mult.
+ * Direcțiile de lucru, așa cum le-a dat echipa. Grupate doar ca să se scaneze
+ * din ochi: 21 de rânduri la rând ar fi un perete.
  */
-export const GRID_ROWS: { id: string; label: string; zones?: ZoneId[]; always?: boolean }[] = [
-  { id: "trupe", label: "Trupele: cum au fost primite și ținute", always: true },
-  { id: "outdoor", label: "Evenimentele outdoor și Piața", zones: ["outdoor"] },
-  { id: "indoor", label: "Evenimentele indoor, galele", zones: ["indoor"] },
-  { id: "ateliere", label: "Atelierele", zones: ["ateliere"] },
-  { id: "comunitate", label: "Partea de comunitate și murale", zones: ["comunitate"] },
-  { id: "scenografie", label: "Scenografia", zones: ["scenografie", "indoor", "outdoor"] },
-  { id: "tehnic", label: "Tehnicul: sunet, lumini, scenă", zones: ["tehnic", "indoor"] },
-  { id: "productie", label: "Producția și achizițiile", zones: ["productie", "scenografie"] },
-  { id: "cazari", label: "Cazarea, mesele, welcome packs", always: true },
-  { id: "transport", label: "Transporturile", zones: ["transport", "trupe"] },
-  { id: "voluntari", label: "Voluntarii: câți au fost și cât de pregătiți", zones: ["voluntari", "outdoor", "indoor"] },
-  { id: "comunicare", label: "Comunicarea și promovarea", zones: ["comunicare", "fotovideo"] },
-  { id: "fotovideo", label: "Materialele foto și video", zones: ["fotovideo", "comunicare"] },
-  { id: "financiar", label: "Partea financiară și sponsorizările", zones: ["financiar"] },
-  { id: "website", label: "Site-ul și ticketingul", zones: ["website"] },
-  { id: "coordonare", label: "Coordonarea internă a echipei", always: true },
-  { id: "atmosfera", label: "Atmosfera generală a festivalului", always: true },
+export const ZONE_GROUPS: { label: string; zones: Zone[] }[] = [
+  {
+    label: "participanți",
+    zones: [
+      { id: "participanti", label: "Participanți", hint: "trupele, program, repetiții, însoțitori" },
+      { id: "invitati", label: "Invitați", hint: "invitații, program, însoțire, contracte" },
+    ],
+  },
+  {
+    label: "evenimente",
+    zones: [
+      { id: "piata", label: "Piața" },
+      { id: "indoor", label: "Evenimente indoor" },
+      { id: "kaufland", label: "Kaufland" },
+      { id: "ateliere", label: "Ateliere" },
+    ],
+  },
+  {
+    label: "scenografie, tehnic, producție",
+    zones: [
+      { id: "scenografie", label: "Scenografie" },
+      { id: "tehnic_out", label: "Tehnic outdoor" },
+      { id: "tehnic_in", label: "Tehnic indoor" },
+      { id: "productie", label: "Producție" },
+    ],
+  },
+  {
+    label: "welcoming",
+    zones: [
+      { id: "transporturi", label: "Transporturi" },
+      { id: "cazari", label: "Cazări" },
+      { id: "mese", label: "Mese" },
+      { id: "welcomepacks", label: "Welcome packs" },
+      { id: "voluntari", label: "Voluntari" },
+    ],
+  },
+  {
+    label: "comunicare",
+    zones: [
+      { id: "comunicare", label: "Comunicare" },
+      { id: "fotovideo", label: "Foto și video" },
+    ],
+  },
+  {
+    label: "bani",
+    zones: [
+      { id: "sponsori", label: "Sponsori" },
+      { id: "financiar", label: "Financiar" },
+    ],
+  },
+  {
+    label: "digital",
+    zones: [
+      { id: "website", label: "Website" },
+      { id: "ticketing", label: "Ticketing" },
+    ],
+  },
+  {
+    label: "altceva",
+    zones: [{ id: "altele", label: "Altceva", hint: "HQ, punct medical, curățenie, merch, orice altceva" }],
+  },
 ];
 
-const seesRow = (row: (typeof GRID_ROWS)[number], zone: ZoneId[]) =>
-  !!row.always || !!row.zones?.some((z) => zone.includes(z));
+export const ZONES: Zone[] = ZONE_GROUPS.flatMap((g) => g.zones);
 
-/** Rândurile pe care le vede cineva din start. */
-export const gridRowsFor = (zone: ZoneId[]) => GRID_ROWS.filter((r) => seesRow(r, zone));
+/** Cele cinci lucruri care decid dacă o direcție a funcționat sau nu. */
+export const DIMENSIONS: { id: string; label: string; hint: string }[] = [
+  { id: "oameni", label: "Oameni", hint: "câți am fost, cât de pregătiți" },
+  { id: "timp", label: "Timp", hint: "când am început, cât a durat pe teren" },
+  { id: "informatie", label: "Informație", hint: "a ajuns la timp de la ceilalți" },
+  { id: "resurse", label: "Resurse", hint: "bani, materiale, echipament, spațiu" },
+  { id: "decizii", label: "Decizii", hint: "cine decide și cât de repede" },
+];
 
-/** Restul, ascunse sub "arată și celelalte zone". */
-export const gridRowsRest = (zone: ZoneId[]) => GRID_ROWS.filter((r) => !seesRow(r, zone));
+/** Variantele din grila de diagnostic, de la bine la rău. */
+export const DIM_OPTIONS: { id: string; label: string }[] = [
+  { id: "ok", label: "a fost ok" },
+  { id: "muchie", label: "pe muchie" },
+  { id: "lipsa", label: "a lipsit" },
+];
 
 /** Cuvintele din care se alege starea. Ordine amestecată intenționat, ca lista
  *  să nu sugereze "răspunsurile bune" la început și cele urâte la sfârșit. */
@@ -196,13 +234,11 @@ export type Question =
       required?: boolean;
     }
   | {
-      /** Grila cu zonele festivalului: notă de la 1 la 5 sau "n-am văzut". */
-      type: "grid";
+      /** Grila de diagnostic: cele cinci dimensiuni pe trei variante. */
+      type: "matrix";
       id: string;
       label: string;
       help?: string;
-      low: string;
-      high: string;
       required?: boolean;
     }
   | {
@@ -227,207 +263,221 @@ export type Section = {
 };
 
 /**
- * Întrebările care se repetă identic în fiecare secțiune de zonă: două lucruri de
- * păstrat, două de schimbat. Faptul că sunt identice e tot scopul: răspunsurile
- * devin comparabile între zone și se pot număra.
- */
-const zoneQuestions = (zona: string, id: string): Question[] => [
-  {
-    type: "items",
-    id: `${id}_keep`,
-    label: `Ce trebuie păstrat ${zona}?`,
-    help: "Scurt, un lucru per rând. Ce a funcționat și ar fi o pierdere să dispară.",
-    slots: 2,
-    accent: "keep",
-    placeholder: "ex. briefingul de dimineață, cu toată echipa",
-  },
-  {
-    type: "items",
-    id: `${id}_change`,
-    label: `Ce trebuie schimbat ${zona}?`,
-    help: "Scurt, un lucru per rând. Dacă știi și cum, scrie cum.",
-    slots: 2,
-    accent: "change",
-    placeholder: "ex. programul final cu două săptămâni înainte, nu în ajun",
-  },
-];
-
-/**
- * Zonele care primesc o secțiune proprie, generată la fel pentru toate.
- *
- * `key` e prefixul id-urilor (`tehnic_keep`, `tehnic_change`, `tehnic_context`).
- * Ține-l scurt și fără diacritice: ajunge direct în numele coloanelor din
- * exportul pentru Excel.
+ * O direcție de lucru primește mereu aceleași patru întrebări: grila de
+ * diagnostic, două lucruri de păstrat, două de schimbat, un câmp liber. Faptul
+ * că sunt identice e tot scopul: răspunsurile se pot compara și număra între
+ * direcții.
  */
 const ZONE_SECTIONS: {
-  key: string;
+  key: ZoneId;
   title: string;
   /** Cum se citește în întrebări: "Ce trebuie păstrat <label>?" */
   label: string;
-  showIf: ZoneId[];
-  note?: string;
-  /** Întrebările puse înaintea listelor. */
-  before?: Question[];
-  /** Întrebarea deschisă de la finalul secțiunii, specifică zonei. */
-  open: { label: string; help: string };
+  /** Întrebarea deschisă de la finalul secțiunii, specifică direcției. */
+  open: { label: string; help?: string };
+  /** A doua întrebare deschisă, doar unde chiar e nevoie de două. */
+  open2?: { label: string; help?: string };
 }[] = [
   {
-    key: "outdoor",
-    title: "evenimentele outdoor și Piața",
-    label: "la evenimentele outdoor",
-    showIf: ["outdoor"],
+    key: "participanti",
+    title: "participanții",
+    label: "la relația cu participanții",
     open: {
-      label: "A tras Piața public spre festival sau a pierdut public din cauza suprapunerilor?",
-      help: "Și orice altceva despre outdoor care nu încape în listele de sus.",
+      label: "Ce feedback ai auzit de la trupe și ar trebui luat în considerare?",
+      help: "Ce ți-au spus direct sau ce ai prins din discuții: program, repetiții, mâncare, cazare, cum au fost primiți.",
+    },
+  },
+  {
+    key: "invitati",
+    title: "invitații",
+    label: "la relația cu invitații",
+    open: {
+      label: "Ce feedback ai auzit de la invitați și ar trebui luat în considerare?",
+      help: "Ce le-a lipsit sau ce ne-au cerut și nu am putut duce: program, cazare, însoțire, contracte, plăți.",
+    },
+  },
+  {
+    key: "piata",
+    title: "Piața",
+    label: "la Piață",
+    open: {
+      label: "Unde și la ce ore ar trebui să fie Piața la #22?",
+      help: "Poziționarea, fluxul oamenilor, ora de deschidere și de închidere. Dacă rămâne bine cum a fost, scrie asta.",
     },
   },
   {
     key: "indoor",
-    title: "evenimentele indoor și galele",
+    title: "evenimentele indoor",
     label: "la evenimentele indoor",
-    showIf: ["indoor"],
     open: {
-      label: "Cum au mers sălile, publicul și programul de scenă?",
-      help: "Ordinea în program, întârzieri, cine ținea firul în sală, cum s-a umplut sau nu.",
+      label: "Ce eveniment ar trebui mutat în altă sală sau la altă oră la #22?",
+      help: "Și de ce: capacitate, tehnic, distanța dintre spații, publicul care nu ajungea, tranzițiile prea scurte.",
+    },
+  },
+  {
+    key: "kaufland",
+    title: "Kaufland",
+    label: "la Kaufland",
+    open: {
+      label: "Ce feedback ai auzit despre Kaufland, de la public sau de la ei?",
+      help: "Ce ne-au cerut, ce a mers pentru ei, ce a mers pentru noi, ce am promis și nu am livrat.",
     },
   },
   {
     key: "ateliere",
     title: "atelierele",
     label: "la ateliere",
-    showIf: ["ateliere"],
     open: {
-      label: "Orice altceva despre ateliere",
-      help: "Înscrieri, prezență, spații, traineri, materiale. De ce s-a întâmplat ce s-a întâmplat?",
-    },
-  },
-  {
-    key: "trupe",
-    title: "trupele și participanții",
-    label: "la felul în care am primit trupele",
-    showIf: ["trupe"],
-    open: {
-      label: "Au avut trupele tot ce le trebuia?",
-      help: "Program, spații de repetiție, mâncare, informații la timp, cineva la care să întrebe. Ce le-a lipsit?",
-    },
-  },
-  {
-    key: "comunitate",
-    title: "comunitate și murale",
-    label: "la partea de comunitate",
-    showIf: ["comunitate"],
-    open: {
-      label: "Ce a rămas în oraș după ce am plecat?",
-      help: "Relația cu școlile, cu instituțiile, cu oamenii din Alexandria. Ce continuă și fără noi?",
+      label: "Ce feedback ai auzit de la traineri sau de la participanți?",
+      help: "Despre spații, orar, materiale, înscrieri, nivelul grupelor.",
     },
   },
   {
     key: "scenografie",
     title: "scenografia",
     label: "la scenografie",
-    showIf: ["scenografie"],
     open: {
-      label: "Cum a mers de la desen la montat?",
-      help: "Timp de execuție, materiale, oameni la montaj, transport, demontare, unde s-a depozitat.",
+      label: "Ce s-a desenat și nu s-a putut executa? De ce?",
+      help: "Timp, bani, materiale, oameni la montaj, transport, depozitare, demontare.",
     },
   },
   {
-    key: "tehnic",
-    title: "tehnicul",
-    label: "la partea tehnică",
-    showIf: ["tehnic"],
+    key: "tehnic_out",
+    title: "tehnicul outdoor",
+    label: "la tehnicul outdoor",
     open: {
-      label: "Unde am fost pe muchie tehnic și ce ne-a lipsit?",
-      help: "Echipamente, timp de probe, oameni, curent, ce am improvizat și nu ar trebui să se repete.",
+      label: "Ce s-a cerut și nu s-a putut face tehnic, afară?",
+      help: "Curent, sunet în aer liber, vremea, montaj și demontaj, echipamente, ce am improvizat.",
+    },
+  },
+  {
+    key: "tehnic_in",
+    title: "tehnicul indoor",
+    label: "la tehnicul indoor",
+    open: {
+      label: "Ce s-a cerut și nu s-a putut face tehnic, în sală?",
+      help: "Timp de probe, lumini, sunet, regie, tranziții între evenimente, ce am improvizat.",
     },
   },
   {
     key: "productie",
-    title: "producția și achizițiile",
-    label: "la producție și achiziții",
-    showIf: ["productie"],
-    before: [
-      {
-        type: "scale",
-        id: "s_productie",
-        label: "Cât de bine a stat producția în picioare?",
-        low: "pe muchie",
-        high: "solid",
-      },
-    ],
+    title: "producția",
+    label: "la producție",
     open: {
       label: "Ce s-a cumpărat prea târziu, degeaba, sau a lipsit de tot?",
       help: "Și cum a mers fluxul: cine cere, cine aprobă, cine cumpără, cine cară.",
     },
   },
   {
-    key: "cazari",
-    title: "cazări, mese, welcome packs",
-    label: "la cazări și mese",
-    showIf: ["cazari"],
+    key: "transporturi",
+    title: "transporturile",
+    label: "la transporturi",
     open: {
-      label: "Unde au fost cele mai multe nemulțumiri și de ce?",
-      help: "Camere, orare de masă, mâncare pentru toate nevoile, welcome packs, cine gestiona reclamațiile.",
+      label: "Cum s-au cerut și s-au confirmat cursele? Unde s-a așteptat degeaba?",
+      help: "Cine cerea, cine confirma, orare, mașini, șoferi, drumuri făcute pe jumătate goale.",
     },
   },
   {
-    key: "transport",
-    title: "transporturile",
-    label: "la transporturi",
-    showIf: ["transport"],
+    key: "cazari",
+    title: "cazările",
+    label: "la cazări",
     open: {
-      label: "Ce a mers prost la transporturi și de ce?",
-      help: "Curse, orare, mașini, șoferi, cine cerea și cine confirma, cât s-a așteptat degeaba.",
+      label: "Unde au fost cele mai multe nemulțumiri la cazare și ce le-a cauzat?",
+      help: "Camere, repartizări, curățenie, cine gestiona reclamațiile, ce s-a rezolvat pe loc.",
+    },
+  },
+  {
+    key: "mese",
+    title: "mesele",
+    label: "la mese",
+    open: {
+      label: "Unde ar trebui să mănânce participanții la #22 și ce nu a funcționat la locul de acum?",
+      help: "Spațiul, distanța, orarele, cozile, cantitățile, nevoile speciale, cine rămânea nemâncat.",
+    },
+  },
+  {
+    key: "welcomepacks",
+    title: "welcome packs",
+    label: "la welcome packs",
+    open: {
+      label: "Ce ar trebui să fie în welcome pack la #22 și ce iese?",
+      help: "Ce s-a folosit, ce a rămas aruncat, ce ne-a cerut lumea și nu era.",
+    },
+    open2: {
+      label: "Când și cum ar trebui montate pachetele?",
+      help: "Realist, cu timpul, locul și oamenii disponibili înainte de festival. Scrie și varianta ideală, dacă e alta.",
     },
   },
   {
     key: "voluntari",
     title: "voluntarii",
-    label: "la coordonarea voluntarilor",
-    showIf: ["voluntari"],
+    label: "la voluntari",
     open: {
-      label: "Au fost destui și au știut ce au de făcut?",
-      help: "Recrutare, ture, brief-uri, ce se întâmpla când cineva nu venea, cine răspundea de ei pe teren.",
+      label: "Cum le-am putea crește interesul și moralul, ca la #22 să fie mai implicați?",
+      help: "Ce i-a motivat și ce i-a demotivat: ture, brief-uri, mâncare, cazare, apartenență, cine ținea de ei.",
     },
   },
   {
-    key: "com",
-    title: "comunicare și promovare",
+    key: "comunicare",
+    title: "comunicarea",
     label: "la comunicare",
-    showIf: ["comunicare"],
     open: {
-      label: "Ai primit la timp ce îți trebuia de la celelalte departamente?",
-      help: "Program final, informații despre invitați, aprobări, materiale, acces.",
+      label: "Ce a adus public și ce a fost efort degeaba?",
+      help: "Ce a funcționat online și offline, ce am făcut din obișnuință, ce n-a văzut nimeni.",
     },
   },
   {
     key: "fotovideo",
     title: "foto și video",
     label: "la foto și video",
-    showIf: ["fotovideo"],
     open: {
-      label: "Ai avut acces și informații ca să prinzi ce trebuia prins?",
-      help: "Ce am ratat și de ce, cum a mers livrarea materialelor, de ce echipament ar fi fost nevoie.",
+      label: "Ce am ratat ca imagine și de ce?",
+      help: "Acces, informații primite târziu, echipament, prea puțini oameni, livrarea materialelor.",
+    },
+  },
+  {
+    key: "sponsori",
+    title: "sponsorii",
+    label: "la sponsori",
+    open: {
+      label: "Ce am promis sponsorilor și nu am livrat, sau invers?",
+      help: "Vizibilitate, rapoarte, cine ținea legătura, ce ne-au cerut și n-am putut duce.",
     },
   },
   {
     key: "financiar",
-    title: "finanțări și sponsorizări",
+    title: "partea financiară",
     label: "la partea financiară",
-    showIf: ["financiar"],
     open: {
-      label: "Ce am promis partenerilor și nu am livrat, sau invers?",
-      help: "Și partea de bugete: unde ne-au lipsit banii, unde am cheltuit degeaba, cât de repede s-a decis.",
+      label: "Unde ne-au lipsit banii și unde am cheltuit degeaba?",
+      help: "Cât de repede se decidea, cum au mers avansurile și decontările, ce a stat blocat.",
     },
   },
   {
     key: "website",
-    title: "website și ticketing",
-    label: "la site și ticketing",
-    showIf: ["website"],
+    title: "website",
+    label: "la site",
     open: {
       label: "Ce ar trebui să facă site-ul și nu face?",
-      help: "Înscrieri, bilete, program, cine actualizează ce, ce întrebări primeai des.",
+      help: "Program, informații, actualizări, ce întrebări primeai des pentru că nu erau pe site.",
+    },
+  },
+  {
+    key: "ticketing",
+    title: "ticketing",
+    label: "la ticketing",
+    open: {
+      label: "Unde s-a blocat ticketingul și ce ai automatiza?",
+      help: "Rezervări, cozi, locuri, oameni care au rezervat și nu au venit, ce s-a făcut de mână.",
+    },
+  },
+  {
+    key: "altele",
+    title: "altceva",
+    label: "la zona pe care ai bifat-o",
+    open: {
+      label: "Despre ce e vorba și cum a mers?",
+      help: "Spune-ne cât să înțelegem, fiindcă noi nu am pus întrebări despre zona asta.",
     },
   },
 ];
@@ -435,12 +485,39 @@ const ZONE_SECTIONS: {
 const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
   id: z.key,
   title: z.title,
-  showIf: z.showIf,
-  optionalNote: z.note ?? `Secțiunea asta apare pentru că ai bifat "${z.title}".`,
+  showIf: [z.key],
+  optionalNote: `Secțiunea asta apare pentru că ai bifat "${z.title}".`,
   questions: [
-    ...(z.before ?? []),
-    ...zoneQuestions(z.label, z.key),
+    {
+      type: "matrix",
+      id: `${z.key}_diag`,
+      // `label` e deja forma cu prepoziție ("la Piață", "la mese"), doar o
+      // scriem cu majusculă. Titlul secțiunii are articol și ar suna greșit.
+      label: `${z.label[0].toUpperCase()}${z.label.slice(1)}, cum au stat lucrurile?`,
+      help: "Aceleași cinci lucruri la toate direcțiile, ca să se poată compara.",
+    },
+    {
+      type: "items",
+      id: `${z.key}_keep`,
+      label: `Ce trebuie păstrat ${z.label}?`,
+      help: "Un lucru per rând. Ce ar fi o pierdere să dispară.",
+      slots: 2,
+      accent: "keep",
+      placeholder: "ex. briefingul de dimineață, cu toată echipa",
+    },
+    {
+      type: "items",
+      id: `${z.key}_change`,
+      label: `Ce trebuie schimbat ${z.label}?`,
+      help: "Un lucru per rând. Dacă știi și cum, scrie cum.",
+      slots: 2,
+      accent: "change",
+      placeholder: "ex. programul final cu două săptămâni înainte, nu în ajun",
+    },
     { type: "long", id: `${z.key}_context`, label: z.open.label, help: z.open.help },
+    ...(z.open2
+      ? [{ type: "long" as const, id: `${z.key}_context2`, label: z.open2.label, help: z.open2.help }]
+      : []),
   ],
 });
 
@@ -448,14 +525,13 @@ export const SECTIONS: Section[] = [
   {
     id: "tine",
     title: "despre tine",
-    intro:
-      "Din bifele de mai jos se construiește restul formularului. Nu te întrebăm despre zone în care n-ai fost.",
+    intro: "Nu întrebăm rolul, fiindcă rolul înseamnă un singur om. Numele e opțional.",
     questions: [
       {
         type: "short",
         id: "nume",
         label: "Numele tău",
-        help: "Opțional. Poți completa anonim. Dacă îți scrii numele, putem reveni la tine pentru detalii sau ca să ducem mai departe o idee.",
+        help: "Poți completa anonim. Dacă îți scrii numele, putem reveni la tine pentru detalii.",
         placeholder: "opțional",
         greet: true,
       },
@@ -463,14 +539,7 @@ export const SECTIONS: Section[] = [
         type: "choice",
         id: "departament",
         label: "Din ce departament ai făcut parte, în principal?",
-        options: DEPARTMENTS,
-        required: true,
-      },
-      {
-        type: "short",
-        id: "rol",
-        label: "Ce rol ai avut la #21?",
-        placeholder: "ex. Coord. Ateliere, Executive Producție, Fotograf",
+        options: [...DEPARTMENTS, DEPARTMENT_PRIVATE],
         required: true,
       },
       {
@@ -482,8 +551,8 @@ export const SECTIONS: Section[] = [
       {
         type: "zones",
         id: "zone",
-        label: "În ce zone ai fost implicat/ă direct sau ai văzut de aproape?",
-        help: "Bifează tot ce se aplică. Ce nu bifezi, nu te mai întreabă nimeni.",
+        label: "De ce te-ai ocupat tu la #21?",
+        help: "Bifează tot ce ai lucrat efectiv. Pentru fiecare bifă primești o secțiune scurtă.",
         required: true,
       },
     ],
@@ -506,7 +575,6 @@ export const SECTIONS: Section[] = [
         type: "long",
         id: "moment_bun",
         label: "Un moment în care ai simțit că merită.",
-        help: "Momentele astea ajung în deschiderea ediției următoare.",
       },
       {
         type: "long",
@@ -532,17 +600,97 @@ export const SECTIONS: Section[] = [
         type: "choice",
         id: "revenire",
         label: "Ai vrea să revii în echipă la #22?",
-        help: "Răspunsul ăsta ne spune, mai bine decât orice altceva, cum a fost de fapt să lucrezi cu noi. Dacă vrei să explici, scrie la ultima întrebare din formular.",
+        help: "Dacă vrei să explici, scrie la ultima întrebare din formular.",
         options: ["da", "da, dar în alt rol", "nu știu încă", "probabil nu"],
       },
     ],
   },
 
+  ...ZONE_SECTIONS.map(zoneSection),
+
   {
-    id: "rol",
-    title: "rolul tău",
-    intro: "Cât de clar a fost ce trebuie să faci și dacă ai avut cu ce.",
+    id: "program",
+    title: "program și flow",
+    intro: "Programul, văzut ca orar de muncă, nu ca spectator.",
     questions: [
+      {
+        type: "choice",
+        id: "volum",
+        label: "Cum a fost programul, ca volum?",
+        options: ["prea încărcat", "cam bine", "am mai fi putut duce"],
+        required: true,
+      },
+      {
+        type: "items",
+        id: "program_taie",
+        label: "Ce ai tăia din program?",
+        help: "Un lucru per rând.",
+        slots: 2,
+        accent: "change",
+      },
+      {
+        type: "scale",
+        id: "s_program",
+        label: "Ai știut la timp programul și schimbările de ultim moment?",
+        low: "aflam pe ultima sută",
+        high: "știam mereu",
+      },
+      {
+        type: "long",
+        id: "program_info",
+        label: "Unde s-a rupt informația despre program?",
+        help: "Cine afla târziu, de la cine, și ce s-a stricat din cauza asta.",
+      },
+      {
+        type: "choice",
+        id: "moment_zi",
+        label: "În ce moment se rupea ziua cel mai des?",
+        options: [
+          "dimineața, la început",
+          "la tranziția între evenimente",
+          "seara târziu",
+          "noaptea, la demontat",
+          "nu se rupea",
+        ],
+      },
+      {
+        type: "long",
+        id: "suprapuneri_triaj",
+        label:
+          "La suprapunerile din program: care merită păstrate (e ok să ruleze în paralel) și care trebuie neapărat separate anul viitor?",
+        help: "Dacă una te-a afectat direct, scrie cum s-a văzut: public împuținat, prea puțini oameni pe poziții, tu în două locuri deodată.",
+      },
+    ],
+  },
+
+  {
+    id: "echipa",
+    title: "echipa",
+    questions: [
+      {
+        type: "long",
+        id: "facut_degeaba",
+        label: "Ce ai făcut tu și n-ar fi trebuit să fie treaba ta?",
+      },
+      {
+        type: "long",
+        id: "nefacut",
+        label: "Ce nu s-a făcut deloc și ar fi trebuit?",
+        help: "Lucrurile de care nu răspundea nimeni.",
+      },
+      {
+        type: "long",
+        id: "departamente",
+        label: "Unde s-a rupt firul între departamente?",
+        help: "Momentele în care două departamente au așteptat unul după altul, sau au făcut aceeași treabă de două ori.",
+      },
+      {
+        // Un rând, nu o casetă: cere un nume, nu un eseu.
+        type: "short",
+        id: "ajutor",
+        label: "Cine ți-a fost cel mai de ajutor?",
+        placeholder: "un nume sau două",
+      },
       {
         type: "scale",
         id: "s_claritate",
@@ -557,103 +705,18 @@ export const SECTIONS: Section[] = [
         label: "De ce ai dat nota asta?",
         help: "Dacă a fost un moment în care n-ai știut cine decide sau cine face, scrie-l aici.",
       },
-      {
-        type: "long",
-        id: "lipsit",
-        label: "Ce ți-a lipsit ca să-ți faci treaba mai bine?",
-        help: "Timp, oameni, informație, buget, echipament, o decizie luată mai devreme.",
-      },
-    ],
-  },
-
-  {
-    id: "flow",
-    title: "flow și program",
-    intro: "Partea pe care a simțit-o toată lumea, oriunde a lucrat.",
-    questions: [
-      {
-        type: "long",
-        id: "suprapuneri_triaj",
-        label:
-          "La suprapunerile din program: care merită păstrate (e ok să ruleze în paralel) și care trebuie neapărat separate anul viitor?",
-        help: "Dacă una te-a afectat direct, scrie cum s-a văzut: public împuținat, prea puțini oameni pe poziții, tu în două locuri deodată.",
-      },
-      {
-        type: "scale",
-        id: "s_comunicare",
-        label: "Cât de bine a funcționat comunicarea în timp real?",
-        low: "haotic",
-        high: "impecabil",
-      },
-      {
-        type: "long",
-        id: "comunicare",
-        label: "Ce ai schimba la grupuri, briefinguri și anunțuri de ultim moment?",
-      },
-    ],
-  },
-
-  ...ZONE_SECTIONS.map(zoneSection),
-
-  {
-    id: "oameni",
-    title: "oameni și echipă",
-    intro: "Cum au fost împărțiți oamenii între departamente.",
-    questions: [
-      {
-        type: "long",
-        id: "efort",
-        label: "Cine a fost supraîncărcat și cine subfolosit?",
-        help: "Poți scrie roluri sau departamente, nu neapărat nume, dacă îți e mai comod.",
-      },
-      {
-        type: "long",
-        id: "departamente",
-        label: "Unde s-a rupt firul între departamente?",
-        help: "Momentele în care două departamente au așteptat unul după altul, sau au făcut aceeași treabă de două ori.",
-      },
-      {
-        type: "long",
-        id: "crescut",
-        label: "Pe cine ai văzut că a crescut sau a avut o contribuție care merită menționată?",
-        help: "Inclusiv juniori, voluntari sau shtanga boyz, dacă e cazul.",
-      },
-    ],
-  },
-
-  {
-    id: "grila",
-    title: "cum a mers, pe zone",
-    intro:
-      "Câteva note de câte două secunde. Apar doar zonele pe care ai avut cum să le vezi. Din ele iese o hartă a festivalului: se compară zonele între ele și cu edițiile viitoare.",
-    questions: [
-      {
-        type: "grid",
-        id: "grila",
-        label: "Cum a mers, din ce ai văzut tu?",
-        help: 'Dacă n-ai avut cum să vezi o zonă, apasă "n-am văzut". E un răspuns bun, nu unul lipsă.',
-        low: "a mers prost",
-        high: "a mers foarte bine",
-      },
-      {
-        type: "long",
-        id: "zona_lipsa",
-        label: "Ce parte a festivalului nu apare mai sus și merită discutată?",
-        help: "Zonele mici se pierd ușor: merch, acreditări, HQ-ul, punctul medical, curățenia, muzica din pauze, petrecerea echipei, gestionarea grupurilor de WhatsApp. Scrie orice a fost al tău și nu l-a întrebat nimeni.",
-      },
     ],
   },
 
   {
     id: "idei",
     title: "ce schimbăm la #22",
-    intro: "Partea care se transformă direct în deciziile pentru ediția următoare.",
     questions: [
       {
         type: "items",
         id: "top3",
         label: "Dacă la #22 s-ar schimba doar trei lucruri, care ar fi?",
-        help: "În ordinea importanței, cel mai important primul. Scurt, ca să se poată număra între noi toți. Poate fi și ceva din pregătirea de dinainte, nu doar din zilele festivalului.",
+        help: "În ordinea importanței, cel mai important primul. Poate fi și ceva scris mai sus, dacă e cel mai important.",
         slots: 3,
         ranked: true,
         accent: "change",
@@ -673,6 +736,17 @@ export const SECTIONS: Section[] = [
     title: "note de final",
     questions: [
       {
+        type: "short",
+        id: "zona_bine",
+        label: "Care zonă a festivalului a mers cel mai bine?",
+        help: "Din tot ce ai văzut, nu doar din ce ai lucrat.",
+      },
+      {
+        type: "short",
+        id: "zona_prost",
+        label: "Care a mers cel mai prost?",
+      },
+      {
         type: "scale",
         id: "s_general",
         label: "Cât de mulțumit/ă ești de #21 per ansamblu?",
@@ -683,8 +757,8 @@ export const SECTIONS: Section[] = [
       {
         type: "long",
         id: "recomanzi",
-        label: "Pe cine ai recomanda în echipa principală de la #22? De ce?",
-        help: "Inclusiv juniori sau voluntari care ar fi pregătiți pentru un rol mai mare.",
+        label: "Pe cine ai recomanda pentru un rol mai mare la #22? De ce?",
+        help: "Inclusiv juniori, voluntari sau shtanga boyz.",
       },
       {
         type: "long",

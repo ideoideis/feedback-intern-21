@@ -32,19 +32,12 @@ export const SCALE_REACTIONS: Record<string, Record<number, string>> = {
     4: "sună sănătos.",
     5: "atunci mai avem loc să creștem.",
   },
-  s_comunicare: {
-    1: "haos, am înțeles.",
-    2: "s-a auzit. și de aici.",
-    3: "a mers pe voce tare și noroc.",
+  s_program: {
+    1: "pe ultima sută. asta e de reparat.",
+    2: "prea târziu, prea des.",
+    3: "pe jumătate.",
     4: "aproape.",
-    5: "impresionant, sincer.",
-  },
-  s_productie: {
-    1: "deci a ținut cu scotch.",
-    2: "pe muchie, cum ziceam.",
-    3: "a ținut, dar cu efort.",
-    4: "solid.",
-    5: "cineva a făcut o treabă foarte bună.",
+    5: "atunci am făcut ceva bine.",
   },
   s_general: {
     1: "ne pare rău. mulțumim că ai spus-o direct.",
@@ -107,6 +100,19 @@ export const CHOICE_REACTIONS: Record<string, Record<string, string>> = {
     Producție: "voi țineți tot în picioare.",
     Financiar: "voi faceți posibil restul.",
     Website: "mulțumim, chiar contează.",
+    "prefer să nu spun": "e ok. mulțumim oricum.",
+  },
+  volum: {
+    "prea încărcat": "notat. la #22 tăiem.",
+    "cam bine": "bun de știut.",
+    "am mai fi putut duce": "ambițios/oasă. ținem minte.",
+  },
+  moment_zi: {
+    "dimineața, la început": "deci startul e problema.",
+    "la tranziția între evenimente": "acolo se pierde tot, în fiecare an.",
+    "seara târziu": "notat.",
+    "noaptea, la demontat": "acolo se vede cine rămâne.",
+    "nu se rupea": "atunci a mers bine.",
   },
   revenire: {
     da: "ne bucurăm. serios.",
@@ -124,6 +130,8 @@ export const HAPPY_CHOICES = [
   "mai multe",
   "da",
   "da, dar în alt rol",
+  "cam bine",
+  "nu se rupea",
   ...DEPARTMENTS,
 ];
 

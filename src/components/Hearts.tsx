@@ -18,12 +18,15 @@ type HeartsApi = {
   burstFrom: (el: Element | null, count?: number) => void;
   /** Ploaie de inimioare pe tot ecranul, pentru momentele mari. */
   rain: (count?: number) => void;
+  /** Câte au ieșit de la începutul sesiunii. Se adună, ca o colecție. */
+  total: number;
 };
 
 const HeartsCtx = createContext<HeartsApi>({
   burstAt: () => {},
   burstFrom: () => {},
   rain: () => {},
+  total: 0,
 });
 
 export const useHearts = () => useContext(HeartsCtx);
@@ -32,11 +35,13 @@ const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
 export function HeartsProvider({ children }: { children: ReactNode }) {
   const [hearts, setHearts] = useState<Heart[]>([]);
+  const [total, setTotal] = useState(0);
   const seq = useRef(0);
 
   const spawn = useCallback((made: Omit<Heart, "id">[]) => {
     const withIds = made.map((h) => ({ ...h, id: seq.current++ }));
     setHearts((prev) => [...prev, ...withIds]);
+    setTotal((n) => n + withIds.length);
     const ids = new Set(withIds.map((h) => h.id));
     // Curățăm după ce s-a terminat animația, ca să nu crească DOM-ul la infinit.
     window.setTimeout(() => setHearts((prev) => prev.filter((h) => !ids.has(h.id))), 2200);
@@ -84,7 +89,7 @@ export function HeartsProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <HeartsCtx.Provider value={{ burstAt, burstFrom, rain }}>
+    <HeartsCtx.Provider value={{ burstAt, burstFrom, rain, total }}>
       {children}
       <div aria-hidden="true">
         {hearts.map((h) => (

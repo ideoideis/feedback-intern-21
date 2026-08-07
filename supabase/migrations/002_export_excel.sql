@@ -1,4 +1,4 @@
--- Export pentru Excel.
+-- Export pentru Excel, plus reparațiile de schemă.
 --
 -- Răspunsurile stau în `answers` (jsonb), ca să putem schimba întrebările fără
 -- migrări. Dar jsonb nu se citește în Excel, așa că vederea de mai jos îl
@@ -6,12 +6,25 @@
 --   Table Editor -> feedback_intern_21_excel -> Export -> CSV
 -- și se deschide direct în Excel (UTF-8).
 --
--- Fișierul se poate rula de câte ori vrei: nu strică nimic din ce există.
+-- Fișierul se poate rula de câte ori vrei, inclusiv peste un tabel creat cu o
+-- versiune mai veche din 001: adaugă ce lipsește și nu strică nimic.
 -- Când adaugi o întrebare în src/data/questions.ts, adaugă și o coloană aici.
 
--- ── Coloane adăugate după prima versiune a tabelului ──────────────────────
+-- ── Reparații de schemă, pentru tabelele create înainte ────────────────────
 alter table public.feedback_intern_21 add column if not exists departament text;
-alter table public.feedback_intern_21 add column if not exists scala_productie smallint;
+alter table public.feedback_intern_21 add column if not exists scala_program smallint;
+
+-- Rolul nu se mai cere (identifica exact o persoană). Dacă tabelul a fost creat
+-- cu `rol not null`, inserările ar eșua, așa că scoatem constrângerea.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'feedback_intern_21' and column_name = 'rol'
+  ) then
+    execute 'alter table public.feedback_intern_21 alter column rol drop not null';
+  end if;
+end $$;
 
 -- ── Ajutoare ──────────────────────────────────────────────────────────────
 
@@ -26,24 +39,26 @@ returns text language sql immutable as $$
   ) end
 $$;
 
--- Nota dată unei zone în grilă. Numeric, ca să se poată face medii în Excel;
--- "n-am văzut" iese null aici și apare în coloana cu zonele nevăzute.
-create or replace function public.ii_nota(v jsonb, zona text)
-returns smallint language sql immutable as $$
-  select case
-    when jsonb_typeof(v -> 'grila' -> zona) = 'number'
-    then (v -> 'grila' ->> zona)::smallint
+-- O celulă din grila de diagnostic: "a fost ok", "pe muchie" sau "a lipsit".
+create or replace function public.ii_diag(v jsonb, zona text, dim text)
+returns text language sql immutable as $$
+  select case v -> (zona || '_diag') ->> dim
+    when 'ok'     then 'a fost ok'
+    when 'muchie' then 'pe muchie'
+    when 'lipsa'  then 'a lipsit'
   end
 $$;
 
--- Zonele pe care omul a marcat explicit "n-am văzut".
-create or replace function public.ii_nevazute(v jsonb)
+-- Grila unei direcții, pe un rând: "oameni: ok · timp: pe muchie · ...".
+-- Util când vrei să vezi tot dintr-o privire, fără cinci coloane per direcție.
+create or replace function public.ii_diag_all(v jsonb, zona text)
 returns text language sql immutable as $$
-  select case when jsonb_typeof(v -> 'grila') = 'object' then (
-    select nullif(string_agg(k, ', ' order by k), '')
-    from jsonb_each(v -> 'grila') as g(k, val)
-    where val = '"nu"'::jsonb
-  ) end
+  select nullif(string_agg(d.label || ': ' || public.ii_diag(v, zona, d.dim), ' · '), '')
+  from (values
+    ('oameni', 'oameni'), ('timp', 'timp'), ('informatie', 'informație'),
+    ('resurse', 'resurse'), ('decizii', 'decizii')
+  ) as d(dim, label)
+  where public.ii_diag(v, zona, d.dim) is not null
 $$;
 
 -- ── Vederea ───────────────────────────────────────────────────────────────
@@ -57,10 +72,9 @@ select
   to_char(f.created_at at time zone 'Europe/Bucharest', 'DD.MM.YYYY HH24:MI') as "Trimis la",
   coalesce(f.nume, '(anonim)')                    as "Nume",
   f.departament                                   as "Departament",
-  f.rol                                           as "Rol",
   f.editii                                        as "A câta ediție",
-  array_to_string(f.zone, ', ')                   as "Zone bifate",
-  f.answers ->> 'zone_altele'                     as "Altă zonă bifată",
+  array_to_string(f.zone, ', ')                   as "De ce s-a ocupat",
+  f.answers ->> 'zone_altele'                     as "Altceva, anume",
 
   -- cum a trecut prin festival
   public.ii_list(f.answers -> 'stare_cuvinte')    as "Cum s-a simțit",
@@ -70,116 +84,21 @@ select
   f.scala_epuizare                                as "Energie la final 1-5",
   f.revenire                                      as "Revine la #22",
 
-  -- rolul lui
+  -- program și flow
+  f.answers ->> 'volum'                           as "Programul, ca volum",
+  public.ii_list(f.answers -> 'program_taie')     as "Ce ar tăia din program",
+  f.scala_program                                 as "A știut programul la timp 1-5",
+  f.answers ->> 'program_info'                    as "Unde s-a rupt informația",
+  f.answers ->> 'moment_zi'                       as "Când se rupea ziua",
+  f.answers ->> 'suprapuneri_triaj'               as "Suprapuneri: ce păstrăm, ce separăm",
+
+  -- echipa
+  f.answers ->> 'facut_degeaba'                   as "Ce a făcut și nu era treaba lui",
+  f.answers ->> 'nefacut'                         as "Ce nu s-a făcut deloc",
+  f.answers ->> 'departamente'                    as "Unde s-a rupt între departamente",
+  f.answers ->> 'ajutor'                          as "Cine i-a fost de ajutor",
   f.scala_claritate                               as "Claritate roluri 1-5",
   f.answers ->> 'claritate_de_ce'                 as "De ce nota la claritate",
-  f.answers ->> 'lipsit'                          as "Ce i-a lipsit",
-
-  -- flow și program
-  f.answers ->> 'suprapuneri_triaj'               as "Suprapuneri: ce păstrăm, ce separăm",
-  f.scala_comunicare                              as "Comunicare în timp real 1-5",
-  f.answers ->> 'comunicare'                      as "Ce ar schimba la comunicarea internă",
-
-  -- evenimente outdoor și Piața
-  public.ii_list(f.answers -> 'outdoor_keep')     as "Outdoor: de păstrat",
-  public.ii_list(f.answers -> 'outdoor_change')   as "Outdoor: de schimbat",
-  f.answers ->> 'outdoor_context'                 as "Outdoor: public și suprapuneri",
-
-  -- evenimente indoor și gale
-  public.ii_list(f.answers -> 'indoor_keep')      as "Indoor: de păstrat",
-  public.ii_list(f.answers -> 'indoor_change')    as "Indoor: de schimbat",
-  f.answers ->> 'indoor_context'                  as "Indoor: săli, public, program",
-
-  -- ateliere
-  public.ii_list(f.answers -> 'ateliere_keep')    as "Ateliere: de păstrat",
-  public.ii_list(f.answers -> 'ateliere_change')  as "Ateliere: de schimbat",
-  f.answers ->> 'ateliere_context'                as "Ateliere: altele",
-
-  -- trupe și participanți
-  public.ii_list(f.answers -> 'trupe_keep')       as "Trupe: de păstrat",
-  public.ii_list(f.answers -> 'trupe_change')     as "Trupe: de schimbat",
-  f.answers ->> 'trupe_context'                   as "Trupe: ce le-a lipsit",
-
-  -- comunitate și murale
-  public.ii_list(f.answers -> 'comunitate_keep')   as "Comunitate: de păstrat",
-  public.ii_list(f.answers -> 'comunitate_change') as "Comunitate: de schimbat",
-  f.answers ->> 'comunitate_context'               as "Comunitate: ce a rămas în oraș",
-
-  -- scenografie
-  public.ii_list(f.answers -> 'scenografie_keep')   as "Scenografie: de păstrat",
-  public.ii_list(f.answers -> 'scenografie_change') as "Scenografie: de schimbat",
-  f.answers ->> 'scenografie_context'               as "Scenografie: de la desen la montat",
-
-  -- tehnic
-  public.ii_list(f.answers -> 'tehnic_keep')      as "Tehnic: de păstrat",
-  public.ii_list(f.answers -> 'tehnic_change')    as "Tehnic: de schimbat",
-  f.answers ->> 'tehnic_context'                  as "Tehnic: unde am fost pe muchie",
-
-  -- producție și achiziții
-  f.scala_productie                               as "Producție 1-5",
-  public.ii_list(f.answers -> 'productie_keep')   as "Producție: de păstrat",
-  public.ii_list(f.answers -> 'productie_change') as "Producție: de schimbat",
-  f.answers ->> 'productie_context'               as "Producție: cumpărat târziu sau degeaba",
-
-  -- cazări, mese, welcome packs
-  public.ii_list(f.answers -> 'cazari_keep')      as "Cazări și mese: de păstrat",
-  public.ii_list(f.answers -> 'cazari_change')    as "Cazări și mese: de schimbat",
-  f.answers ->> 'cazari_context'                  as "Cazări și mese: nemulțumiri",
-
-  -- transporturi
-  public.ii_list(f.answers -> 'transport_keep')   as "Transporturi: de păstrat",
-  public.ii_list(f.answers -> 'transport_change') as "Transporturi: de schimbat",
-  f.answers ->> 'transport_context'               as "Transporturi: ce a mers prost",
-
-  -- voluntari
-  public.ii_list(f.answers -> 'voluntari_keep')   as "Voluntari: de păstrat",
-  public.ii_list(f.answers -> 'voluntari_change') as "Voluntari: de schimbat",
-  f.answers ->> 'voluntari_context'               as "Voluntari: destui și pregătiți",
-
-  -- comunicare și promovare
-  public.ii_list(f.answers -> 'com_keep')         as "Comunicare: de păstrat",
-  public.ii_list(f.answers -> 'com_change')       as "Comunicare: de schimbat",
-  f.answers ->> 'com_context'                     as "Comunicare: a primit la timp ce trebuia",
-
-  -- foto și video
-  public.ii_list(f.answers -> 'fotovideo_keep')   as "Foto-video: de păstrat",
-  public.ii_list(f.answers -> 'fotovideo_change') as "Foto-video: de schimbat",
-  f.answers ->> 'fotovideo_context'               as "Foto-video: acces și informații",
-
-  -- finanțări și sponsorizări
-  public.ii_list(f.answers -> 'financiar_keep')   as "Financiar: de păstrat",
-  public.ii_list(f.answers -> 'financiar_change') as "Financiar: de schimbat",
-  f.answers ->> 'financiar_context'               as "Financiar: promis vs livrat",
-
-  -- website și ticketing
-  public.ii_list(f.answers -> 'website_keep')     as "Website: de păstrat",
-  public.ii_list(f.answers -> 'website_change')   as "Website: de schimbat",
-  f.answers ->> 'website_context'                 as "Website: ce ar trebui să facă",
-
-  -- oameni și echipă
-  f.answers ->> 'efort'                           as "Supraîncărcați / subfolosiți",
-  f.answers ->> 'departamente'                    as "Unde s-a rupt între departamente",
-  f.answers ->> 'crescut'                         as "Cine a crescut",
-
-  -- notele pe zone
-  public.ii_nota(f.answers, 'trupe')              as "Notă trupe",
-  public.ii_nota(f.answers, 'outdoor')            as "Notă outdoor",
-  public.ii_nota(f.answers, 'indoor')             as "Notă indoor",
-  public.ii_nota(f.answers, 'ateliere')           as "Notă ateliere",
-  public.ii_nota(f.answers, 'comunitate')         as "Notă comunitate",
-  public.ii_nota(f.answers, 'scenografie')        as "Notă scenografie",
-  public.ii_nota(f.answers, 'tehnic')             as "Notă tehnic",
-  public.ii_nota(f.answers, 'productie')          as "Notă producție",
-  public.ii_nota(f.answers, 'cazari')             as "Notă cazări și mese",
-  public.ii_nota(f.answers, 'transport')          as "Notă transporturi",
-  public.ii_nota(f.answers, 'voluntari')          as "Notă voluntari",
-  public.ii_nota(f.answers, 'comunicare')         as "Notă comunicare",
-  public.ii_nota(f.answers, 'financiar')          as "Notă financiar",
-  public.ii_nota(f.answers, 'website')            as "Notă website",
-  public.ii_nota(f.answers, 'coordonare')         as "Notă coordonare internă",
-  public.ii_nota(f.answers, 'atmosfera')          as "Notă atmosferă",
-  public.ii_nevazute(f.answers)                   as "Zone pe care nu le-a văzut",
-  f.answers ->> 'zona_lipsa'                      as "Zonă care lipsea din listă",
 
   -- ce schimbăm la #22
   nullif(trim(f.answers -> 'top3' ->> 0), '')     as "Top 1",
@@ -187,10 +106,124 @@ select
   nullif(trim(f.answers -> 'top3' ->> 2), '')     as "Top 3",
   f.answers ->> 'idee'                            as "Idee nouă",
 
-  -- final
+  -- per ansamblu
+  f.answers ->> 'zona_bine'                       as "Zona care a mers cel mai bine",
+  f.answers ->> 'zona_prost'                      as "Zona care a mers cel mai prost",
   f.scala_general                                 as "Mulțumire generală 1-5",
-  f.answers ->> 'recomanzi'                       as "Recomandă în echipa principală",
+  f.answers ->> 'recomanzi'                       as "Recomandă pentru un rol mai mare",
   f.answers ->> 'orice'                           as "Altceva",
+
+  -- ── direcțiile: grila de diagnostic, de păstrat, de schimbat, text liber ──
+  public.ii_diag_all(f.answers, 'participanti')   as "Participanți: diagnostic",
+  public.ii_list(f.answers -> 'participanti_keep')   as "Participanți: de păstrat",
+  public.ii_list(f.answers -> 'participanti_change') as "Participanți: de schimbat",
+  f.answers ->> 'participanti_context'            as "Participanți: text liber",
+
+  public.ii_diag_all(f.answers, 'invitati')       as "Invitați: diagnostic",
+  public.ii_list(f.answers -> 'invitati_keep')    as "Invitați: de păstrat",
+  public.ii_list(f.answers -> 'invitati_change')  as "Invitați: de schimbat",
+  f.answers ->> 'invitati_context'                as "Invitați: text liber",
+
+  public.ii_diag_all(f.answers, 'piata')          as "Piața: diagnostic",
+  public.ii_list(f.answers -> 'piata_keep')       as "Piața: de păstrat",
+  public.ii_list(f.answers -> 'piata_change')     as "Piața: de schimbat",
+  f.answers ->> 'piata_context'                   as "Piața: text liber",
+
+  public.ii_diag_all(f.answers, 'indoor')         as "Indoor: diagnostic",
+  public.ii_list(f.answers -> 'indoor_keep')      as "Indoor: de păstrat",
+  public.ii_list(f.answers -> 'indoor_change')    as "Indoor: de schimbat",
+  f.answers ->> 'indoor_context'                  as "Indoor: text liber",
+
+  public.ii_diag_all(f.answers, 'kaufland')       as "Kaufland: diagnostic",
+  public.ii_list(f.answers -> 'kaufland_keep')    as "Kaufland: de păstrat",
+  public.ii_list(f.answers -> 'kaufland_change')  as "Kaufland: de schimbat",
+  f.answers ->> 'kaufland_context'                as "Kaufland: text liber",
+
+  public.ii_diag_all(f.answers, 'ateliere')       as "Ateliere: diagnostic",
+  public.ii_list(f.answers -> 'ateliere_keep')    as "Ateliere: de păstrat",
+  public.ii_list(f.answers -> 'ateliere_change')  as "Ateliere: de schimbat",
+  f.answers ->> 'ateliere_context'                as "Ateliere: text liber",
+
+  public.ii_diag_all(f.answers, 'scenografie')       as "Scenografie: diagnostic",
+  public.ii_list(f.answers -> 'scenografie_keep')    as "Scenografie: de păstrat",
+  public.ii_list(f.answers -> 'scenografie_change')  as "Scenografie: de schimbat",
+  f.answers ->> 'scenografie_context'             as "Scenografie: text liber",
+
+  public.ii_diag_all(f.answers, 'tehnic_out')     as "Tehnic outdoor: diagnostic",
+  public.ii_list(f.answers -> 'tehnic_out_keep')  as "Tehnic outdoor: de păstrat",
+  public.ii_list(f.answers -> 'tehnic_out_change') as "Tehnic outdoor: de schimbat",
+  f.answers ->> 'tehnic_out_context'              as "Tehnic outdoor: text liber",
+
+  public.ii_diag_all(f.answers, 'tehnic_in')      as "Tehnic indoor: diagnostic",
+  public.ii_list(f.answers -> 'tehnic_in_keep')   as "Tehnic indoor: de păstrat",
+  public.ii_list(f.answers -> 'tehnic_in_change') as "Tehnic indoor: de schimbat",
+  f.answers ->> 'tehnic_in_context'               as "Tehnic indoor: text liber",
+
+  public.ii_diag_all(f.answers, 'productie')      as "Producție: diagnostic",
+  public.ii_list(f.answers -> 'productie_keep')   as "Producție: de păstrat",
+  public.ii_list(f.answers -> 'productie_change') as "Producție: de schimbat",
+  f.answers ->> 'productie_context'               as "Producție: text liber",
+
+  public.ii_diag_all(f.answers, 'transporturi')      as "Transporturi: diagnostic",
+  public.ii_list(f.answers -> 'transporturi_keep')   as "Transporturi: de păstrat",
+  public.ii_list(f.answers -> 'transporturi_change') as "Transporturi: de schimbat",
+  f.answers ->> 'transporturi_context'            as "Transporturi: text liber",
+
+  public.ii_diag_all(f.answers, 'cazari')         as "Cazări: diagnostic",
+  public.ii_list(f.answers -> 'cazari_keep')      as "Cazări: de păstrat",
+  public.ii_list(f.answers -> 'cazari_change')    as "Cazări: de schimbat",
+  f.answers ->> 'cazari_context'                  as "Cazări: text liber",
+
+  public.ii_diag_all(f.answers, 'mese')           as "Mese: diagnostic",
+  public.ii_list(f.answers -> 'mese_keep')        as "Mese: de păstrat",
+  public.ii_list(f.answers -> 'mese_change')      as "Mese: de schimbat",
+  f.answers ->> 'mese_context'                    as "Mese: text liber",
+
+  public.ii_diag_all(f.answers, 'welcomepacks')      as "Welcome packs: diagnostic",
+  public.ii_list(f.answers -> 'welcomepacks_keep')   as "Welcome packs: de păstrat",
+  public.ii_list(f.answers -> 'welcomepacks_change') as "Welcome packs: de schimbat",
+  f.answers ->> 'welcomepacks_context'            as "Welcome packs: ce intră și ce iese",
+  f.answers ->> 'welcomepacks_context2'           as "Welcome packs: când și cum se montează",
+
+  public.ii_diag_all(f.answers, 'voluntari')      as "Voluntari: diagnostic",
+  public.ii_list(f.answers -> 'voluntari_keep')   as "Voluntari: de păstrat",
+  public.ii_list(f.answers -> 'voluntari_change') as "Voluntari: de schimbat",
+  f.answers ->> 'voluntari_context'               as "Voluntari: text liber",
+
+  public.ii_diag_all(f.answers, 'comunicare')     as "Comunicare: diagnostic",
+  public.ii_list(f.answers -> 'comunicare_keep')  as "Comunicare: de păstrat",
+  public.ii_list(f.answers -> 'comunicare_change') as "Comunicare: de schimbat",
+  f.answers ->> 'comunicare_context'              as "Comunicare: text liber",
+
+  public.ii_diag_all(f.answers, 'fotovideo')      as "Foto-video: diagnostic",
+  public.ii_list(f.answers -> 'fotovideo_keep')   as "Foto-video: de păstrat",
+  public.ii_list(f.answers -> 'fotovideo_change') as "Foto-video: de schimbat",
+  f.answers ->> 'fotovideo_context'               as "Foto-video: text liber",
+
+  public.ii_diag_all(f.answers, 'sponsori')       as "Sponsori: diagnostic",
+  public.ii_list(f.answers -> 'sponsori_keep')    as "Sponsori: de păstrat",
+  public.ii_list(f.answers -> 'sponsori_change')  as "Sponsori: de schimbat",
+  f.answers ->> 'sponsori_context'                as "Sponsori: text liber",
+
+  public.ii_diag_all(f.answers, 'financiar')      as "Financiar: diagnostic",
+  public.ii_list(f.answers -> 'financiar_keep')   as "Financiar: de păstrat",
+  public.ii_list(f.answers -> 'financiar_change') as "Financiar: de schimbat",
+  f.answers ->> 'financiar_context'               as "Financiar: text liber",
+
+  public.ii_diag_all(f.answers, 'website')        as "Website: diagnostic",
+  public.ii_list(f.answers -> 'website_keep')     as "Website: de păstrat",
+  public.ii_list(f.answers -> 'website_change')   as "Website: de schimbat",
+  f.answers ->> 'website_context'                 as "Website: text liber",
+
+  public.ii_diag_all(f.answers, 'ticketing')      as "Ticketing: diagnostic",
+  public.ii_list(f.answers -> 'ticketing_keep')   as "Ticketing: de păstrat",
+  public.ii_list(f.answers -> 'ticketing_change') as "Ticketing: de schimbat",
+  f.answers ->> 'ticketing_context'               as "Ticketing: text liber",
+
+  public.ii_diag_all(f.answers, 'altele')         as "Altceva: diagnostic",
+  public.ii_list(f.answers -> 'altele_keep')      as "Altceva: de păstrat",
+  public.ii_list(f.answers -> 'altele_change')    as "Altceva: de schimbat",
+  f.answers ->> 'altele_context'                  as "Altceva: text liber",
 
   array_to_string(f.sectiuni, ', ')               as "Secțiuni primite",
   f.id                                            as "id"
