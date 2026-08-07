@@ -238,14 +238,11 @@ const ZONE_SECTIONS: {
   open: { label: string; help?: string };
   /** A doua întrebare deschisă, doar unde chiar e nevoie de două. */
   open2?: { label: string; help?: string };
-  /** Exemplul din câmpul "de schimbat", când cel generic nu spune nimic. */
-  exChange?: string;
 }[] = [
   {
     key: "participanti",
     title: "participanții",
     label: "la relația cu participanții",
-    exChange: "modul de selecție al trupelor",
     open: {
       label: "Ce feedback ai auzit de la trupe și ar trebui luat în considerare?",
       help: "Ce ți-au spus direct sau ce ai prins din discuții: program, repetiții, mâncare, cazare, cum au fost primiți.",
@@ -446,6 +443,38 @@ const ZONE_SECTIONS: {
   },
 ];
 
+/**
+ * Exemplele din câmpurile scurte, per direcție.
+ *
+ * Sunt teme, nu propuneri: "programul din sală" spune ce fel de lucru se scrie
+ * acolo, fără să sugereze răspunsul. Un exemplu de forma "programul final cu
+ * două săptămâni înainte" pune deja răspunsul în gura omului.
+ */
+const EXAMPLES: Record<string, { keep: string; change: string }> = {
+  participanti: { keep: "cine ține legătura cu trupele", change: "modul de selecție al trupelor" },
+  invitati: { keep: "cine îi contactează", change: "programul lor pe zile" },
+  piata: { keep: "amplasare scenă mică", change: "programul evenimentelor" },
+  indoor: { keep: "programul din sală", change: "programul din sală" },
+  kaufland: { keep: "ora de deschidere", change: "programul de acolo" },
+  ateliere: { keep: "împărțirea pe grupe", change: "orarul atelierelor" },
+  scenografie: { keep: "echipa de montaj", change: "timpul de execuție" },
+  tehnic_out: { keep: "sonorizarea din piață", change: "timpul de montaj" },
+  tehnic_in: { keep: "regia din sală", change: "timpul de probe" },
+  productie: { keep: "lista de achiziții", change: "fluxul de aprobări" },
+  transporturi: { keep: "orarul curselor", change: "cine confirmă cursele" },
+  cazari: { keep: "repartizarea pe camere", change: "locul de cazare" },
+  mese: { keep: "orarul meselor", change: "locul unde se mănâncă" },
+  welcomepacks: { keep: "ce conțin", change: "când se montează" },
+  voluntari: { keep: "brief-ul de dimineață", change: "împărțirea pe ture" },
+  comunicare: { keep: "tonul din online", change: "calendarul de postări" },
+  fotovideo: { keep: "împărțirea pe evenimente", change: "lista de momente obligatorii" },
+  sponsori: { keep: "cine ține legătura", change: "ce le promitem" },
+  financiar: { keep: "modul de decontare", change: "termenele de plată" },
+  website: { keep: "structura paginii de program", change: "cine actualizează programul" },
+  ticketing: { keep: "sistemul de rezervări", change: "gestionarea locurilor" },
+  altele: { keep: "ce a funcționat acolo", change: "ce nu a funcționat acolo" },
+};
+
 const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
   id: z.key,
   title: z.title,
@@ -467,7 +496,7 @@ const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
       help: "Un lucru per rând. Ce ar fi o pierdere să dispară.",
       slots: 2,
       accent: "keep",
-      placeholder: "ex. briefingul de dimineață, cu toată echipa",
+      placeholder: `ex. ${EXAMPLES[z.key].keep}`,
     },
     {
       type: "items",
@@ -476,8 +505,7 @@ const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
       help: "Un lucru per rând. Dacă știi și cum, scrie cum.",
       slots: 2,
       accent: "change",
-      // Exemplul propriu direcției, unde cel generic nu spune nimic.
-      placeholder: `ex. ${z.exChange ?? "programul final cu două săptămâni înainte, nu în ajun"}`,
+      placeholder: `ex. ${EXAMPLES[z.key].change}`,
     },
     { type: "long", id: `${z.key}_context`, label: z.open.label, help: z.open.help },
     ...(z.open2
@@ -592,6 +620,7 @@ export const SECTIONS: Section[] = [
         help: "Un lucru per rând.",
         slots: 2,
         accent: "change",
+        placeholder: "ex. un eveniment care se suprapunea",
       },
       {
         type: "scale",
@@ -685,6 +714,7 @@ export const SECTIONS: Section[] = [
         slots: 3,
         ranked: true,
         accent: "change",
+        placeholder: "ex. cine decide pe teren",
         required: true,
       },
       {
