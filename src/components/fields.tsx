@@ -317,7 +317,7 @@ function Items({
             className={cn(
               "flex w-10 flex-none items-center justify-center border border-r-0 text-sm font-semibold",
               invalid && i === 0 ? "border-primary" : "border-input",
-              accent === "keep" && "text-primary",
+              accent === "keep" && "pulse-heart text-primary",
             )}
           >
             {ranked ? i + 1 : accent === "keep" ? "♥" : "›"}

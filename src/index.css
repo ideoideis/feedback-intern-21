@@ -137,6 +137,18 @@
   will-change: transform, opacity;
 }
 
+/* Inima de lângă rândurile "de păstrat", când treci cu mouse-ul peste ea */
+@keyframes beat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.25); }
+  50% { transform: scale(1.05); }
+  75% { transform: scale(1.2); }
+}
+
+.pulse-heart:hover {
+  animation: beat 0.7s ease-in-out infinite;
+}
+
 /* Clătinatul etichetei, când o apeși */
 @keyframes wiggle {
   0%, 100% { transform: rotate(0deg); }

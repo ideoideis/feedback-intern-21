@@ -72,8 +72,17 @@ Nimic din asta nu blochează completarea și tot e dezactivat pentru cine are
 - **Sugestii care se rotesc** în câmpul liber de la final, cât timp e gol.
 - **Rânduri de încurajare** la o treime, la jumătate și aproape de final, plus
   "nu se pierde nimic" dacă te întorci de trei ori.
-- **Coduri:** scrie `ideo` oriunde, sau Konami cu săgețile. Tasta `?` dă un
-  indiciu. Dacă bifezi toate zonele, te întreabă dacă ai dormit vreodată.
+- **Coduri:** scrie `ideo` sau `shtanga` oriunde, sau Konami cu săgețile. Tasta
+  `?` dă un indiciu. Dacă bifezi toate direcțiile, te întreabă dacă ai dormit
+  vreodată. Cine deschide consola găsește un salut acolo.
+- **Colecția:** ♥ din bara de sus ține socoteala inimioarelor scoase în sesiune,
+  iar la final apare un bon cu secțiuni completate, cuvinte scrise, cât ai
+  rezistat, câte inimioare ai adunat și câți oameni au făcut #21. Cifra din
+  urmă e în `FESTIVAL_STATS`, în [`src/data/questions.ts`](src/data/questions.ts),
+  și trebuie corectată.
+- **Tiparul recunoscut pe loc:** dacă marchezi "a lipsit" la aceeași dimensiune
+  în trei direcții diferite, formularul îți spune că a înțeles. Singurul easter
+  egg care e și util: exact tiparul pe care e construit să-l găsească.
 
 ## Conținutul formularului
 

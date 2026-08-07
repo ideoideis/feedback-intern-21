@@ -27,6 +27,18 @@
  *    departamentele mici.
  */
 
+/**
+ * Cifrele de pe ecranul de mulțumire.
+ *
+ * CORECTEAZĂ-LE. Sunt numărate din lista de echipă de la #21 (board, artistic,
+ * welcoming, comunicare, tehnic, producție, financiar, website, plus voluntari,
+ * juniori și shtanga boyz) și nu includ trupele, publicul sau copiii de la
+ * ateliere, pentru că nu am cifrele lor.
+ */
+export const FESTIVAL_STATS = {
+  oameni_in_echipa: 183,
+};
+
 /** Departamentele din structura echipei. Pentru filtrat în Excel. */
 export const DEPARTMENTS: string[] = [
   "Board",

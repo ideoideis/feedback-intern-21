@@ -6,7 +6,13 @@ import { cn } from "@/lib/utils";
 import { supabase, FEEDBACK_TABLE } from "@/lib/supabase";
 import { useHearts } from "@/components/Hearts";
 import { Field, type AnswerValue, type Answers } from "@/components/fields";
-import { visibleSections, type Section, type ZoneId } from "@/data/questions";
+import {
+  DIMENSIONS,
+  FESTIVAL_STATS,
+  visibleSections,
+  type Section,
+  type ZoneId,
+} from "@/data/questions";
 import { MILESTONES } from "@/data/reactions";
 import etichetaLogo from "@/assets/eticheta-ideoideis.png";
 
@@ -67,6 +73,8 @@ export default function Index() {
   const backCount = useRef(0);
   const heartClicks = useRef(0);
   const thanksClicks = useRef(0);
+  const startedAt = useRef<number | null>(null);
+  const [minutes, setMinutes] = useState(0);
 
   // Ciorna stă în browserul de pe care se completează. Nu are nevoie de nume:
   // cine începe pe telefon își găsește răspunsurile pe același telefon, fără
@@ -112,9 +120,14 @@ export default function Index() {
         return;
       }
       if (e.key.length !== 1) return;
-      letters = (letters + e.key.toLowerCase()).slice(-5);
+      letters = (letters + e.key.toLowerCase()).slice(-8);
       if (letters.endsWith("ideo")) {
         hearts.rain(30);
+        letters = "";
+      }
+      if (letters.endsWith("shtanga")) {
+        hearts.rain(45);
+        toast("shtanga boyz forever ♥");
         letters = "";
       }
     };
@@ -123,8 +136,47 @@ export default function Index() {
     return () => window.removeEventListener("keydown", onKey);
   }, [hearts]);
 
+  // Easter egg 5: pentru cine deschide dev tools. Cătălin, tu ești.
+  useEffect(() => {
+    console.log(
+      "%cideo ideis #21 ♥",
+      "color:#E7004C;font-size:20px;font-weight:700",
+    );
+    console.log("dacă ai ajuns aici, înseamnă că ești de-al casei. mulțumim.");
+  }, []);
+
+  // Easter egg 2, și singurul care e și util: dacă același lucru lipsește la trei
+  // direcții diferite, i-o spunem pe loc. Ăsta e exact tiparul pe care formularul
+  // e construit să-l găsească.
+  const announced = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    for (const [key, value] of Object.entries(answers)) {
+      if (!key.endsWith("_diag") || typeof value !== "object" || Array.isArray(value)) continue;
+      for (const [dim, val] of Object.entries(value as Record<string, string>))
+        if (val === "lipsa") counts[dim] = (counts[dim] ?? 0) + 1;
+    }
+    for (const [dim, n] of Object.entries(counts)) {
+      if (n < 3 || announced.current.has(dim)) continue;
+      announced.current.add(dim);
+      const label = DIMENSIONS.find((d) => d.id === dim)?.label.toLowerCase() ?? dim;
+      toast(`${label}: a treia direcție unde a lipsit. am notat, chiar am notat.`);
+    }
+  }, [answers]);
+
   const zone = (answers.zone as ZoneId[]) ?? [];
   const sections = useMemo(() => visibleSections(zone), [zone]);
+
+  /** Câte cuvinte a scris, pentru bonul de la final. Bifele nu se numără. */
+  const wordCount = useMemo(
+    () =>
+      Object.entries(answers).reduce((n, [key, value]) => {
+        if (key === "zone") return n;
+        const text = typeof value === "string" ? value : Array.isArray(value) ? value.join(" ") : "";
+        return n + (text.trim() ? text.trim().split(/\s+/).length : 0);
+      }, 0),
+    [answers],
+  );
   const section: Section | undefined = sections[step];
 
   const set = (id: string, v: AnswerValue) => setAnswers((a) => ({ ...a, [id]: v }));
@@ -213,6 +265,9 @@ export default function Index() {
     }
 
     localStorage.removeItem(DRAFT_KEY);
+    setMinutes(
+      startedAt.current ? Math.max(1, Math.round((Date.now() - startedAt.current) / 60000)) : 0,
+    );
     setPhase("done");
     window.scrollTo({ top: 0 });
     window.setTimeout(() => hearts.rain(34), 250);
@@ -231,6 +286,23 @@ export default function Index() {
         <p className="mt-4 max-w-xl text-sm text-muted-foreground">
           Dacă îți mai vine ceva în minte peste două zile, scrie-ne oricând.
         </p>
+
+        {/* Bonul: cifre despre tine, plus una despre noi toți. */}
+        <dl className="mt-10 w-full max-w-md border-t border-border pt-8 text-left">
+          {[
+            ["secțiuni completate", `${sections.length}`],
+            ["cuvinte scrise", `${wordCount}`],
+            ["cât ai rezistat", minutes === 1 ? "un minut" : `${minutes} minute`],
+            ["inimioare adunate", `${hearts.total}`],
+            ["oameni care au făcut #21", `${FESTIVAL_STATS.oameni_in_echipa}, și tu unul dintre ei`],
+          ].map(([label, value]) => (
+            <div key={label} className="flex items-baseline justify-between gap-4 border-b border-border py-2.5">
+              <dt className="text-sm text-muted-foreground">{label}</dt>
+              <dd className="text-right font-semibold tabular-nums text-primary">{value}</dd>
+            </div>
+          ))}
+        </dl>
+
         {/* Easter egg final: cu cât insiști, cu atât se întâmplă mai mult. */}
         <button
           type="button"
@@ -288,6 +360,13 @@ export default function Index() {
             ))}
           </ul>
 
+          {/* Easter egg 7: pentru cine completează la ore imposibile. */}
+          {new Date().getHours() < 5 && (
+            <p className="mt-8 text-sm font-medium text-primary">
+              e {new Date().getHours()} noaptea. sper că nu e din vina noastră.
+            </p>
+          )}
+
           {restored && (
             <div className="mt-8 border-l-2 border-primary bg-primary/5 p-4">
               <p className="text-sm leading-relaxed">
@@ -308,6 +387,7 @@ export default function Index() {
             type="button"
             onClick={() => {
               setPhase("form");
+              startedAt.current = Date.now();
               window.scrollTo({ top: 0 });
             }}
             className="mt-10 w-full bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
@@ -378,9 +458,12 @@ export default function Index() {
               }
             }}
             aria-label="inimioare"
-            className="text-primary transition-transform hover:scale-125"
+            className="flex items-center gap-1 text-primary transition-transform hover:scale-125"
           >
             ♥
+            {hearts.total > 0 && (
+              <span className="text-xs font-medium tabular-nums">{hearts.total}</span>
+            )}
           </button>
         </div>
       </div>
