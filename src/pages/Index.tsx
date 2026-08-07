@@ -278,7 +278,7 @@ export default function Index() {
 
           <ul className="mt-10 space-y-3 border-t border-border pt-8 text-base">
             {[
-              "Durează 5 la 10 minute.",
+              "Durează 5 - 10 minute.",
               "Se salvează singur pe telefonul sau laptopul de pe care completezi, deci poți închide pagina și continua de pe același dispozitiv.",
               "Numele e opțional. În afară de câteva întrebări, restul e opțional.",
             ].map((t) => (
