@@ -41,14 +41,14 @@ comment on table public.feedback_intern_21 is
 -- RLS: formularul public poate INSERA, doar utilizatorii autentificați pot CITI.
 alter table public.feedback_intern_21 enable row level security;
 
-drop policy if exists "Anyone can insert feedback echipa 21" on public.feedback_intern_21;
-create policy "Anyone can insert feedback echipa 21"
+drop policy if exists "Anyone can insert feedback intern 21" on public.feedback_intern_21;
+create policy "Anyone can insert feedback intern 21"
   on public.feedback_intern_21 for insert
   to anon, authenticated
   with check (true);
 
-drop policy if exists "Authenticated can read feedback echipa 21" on public.feedback_intern_21;
-create policy "Authenticated can read feedback echipa 21"
+drop policy if exists "Authenticated can read feedback intern 21" on public.feedback_intern_21;
+create policy "Authenticated can read feedback intern 21"
   on public.feedback_intern_21 for select
   to authenticated
   using (true);
