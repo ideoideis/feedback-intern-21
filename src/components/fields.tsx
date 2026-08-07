@@ -4,7 +4,15 @@ import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useHearts } from "@/components/Hearts";
-import { DIMENSIONS, DIM_OPTIONS, ZONES, type Question, type ZoneId } from "@/data/questions";
+import {
+  DIMENSIONS,
+  DIM_OPTIONS,
+  ZONES,
+  zoneDeepQuestions,
+  zoneTitle,
+  type Question,
+  type ZoneId,
+} from "@/data/questions";
 import {
   CHOICE_REACTIONS,
   HAPPY_CHOICES,
@@ -478,6 +486,82 @@ function ZonePicker({
   );
 }
 
+/**
+ * Pagina de detaliu: alegi zone dintre cele bifate și întrebările lor apar aici.
+ *
+ * Înainte, fiecare bifă dădea o pagină proprie, iar cine atinsese șapte zone
+ * abandona pe drum. Aici totul stă într-o pagină și e opțional: cine nu vrea,
+ * nu alege nimic și merge mai departe.
+ */
+function ZoneDeep({
+  bifate,
+  value,
+  onChange,
+  answers,
+  set,
+}: {
+  bifate: ZoneId[];
+  value: ZoneId[];
+  onChange: (v: ZoneId[]) => void;
+  answers: Answers;
+  set: (id: string, v: AnswerValue) => void;
+}) {
+  const hearts = useHearts();
+
+  const toggle = (id: ZoneId, el: Element) => {
+    if (value.includes(id)) {
+      onChange(value.filter((z) => z !== id));
+      return;
+    }
+    onChange([...value, id]);
+    hearts.burstFrom(el, 4);
+  };
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {bifate.map((id) => {
+          const active = value.includes(id);
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={(e) => toggle(id, e.currentTarget)}
+              aria-pressed={active}
+              className={cn(
+                "border px-4 py-2.5 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-input bg-background hover:border-primary hover:text-primary",
+              )}
+            >
+              {ZONES.find((z) => z.id === id)?.label ?? id}
+            </button>
+          );
+        })}
+      </div>
+
+      {value.length === 0 && (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Dacă nu alegi nimic, mergi direct mai departe. Nu se supără nimeni.
+        </p>
+      )}
+
+      {/* Întrebările zonelor alese, în ordinea în care au fost alese. */}
+      {value.map((id) => (
+        <div key={id} className="mt-10 border-l-2 border-primary pl-5">
+          <p className="micro-label mb-5 text-primary">{zoneTitle(id)}</p>
+          <div className="space-y-7">
+            {zoneDeepQuestions(id).map((q) => (
+              <Field key={q.id} q={q} answers={answers} set={set} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Un câmp, ales după tipul întrebării. */
 export function Field({
   q,
@@ -581,6 +665,16 @@ export function Field({
           <Matrix
             value={(raw as Record<string, string>) ?? {}}
             onChange={(v) => set(q.id, v)}
+          />
+        )}
+
+        {q.type === "zonedeep" && (
+          <ZoneDeep
+            bifate={(answers.zone as ZoneId[]) ?? []}
+            value={(raw as ZoneId[]) ?? []}
+            onChange={(v) => set(q.id, v)}
+            answers={answers}
+            set={set}
           />
         )}
 

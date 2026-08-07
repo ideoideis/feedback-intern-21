@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEPARTMENTS,
   DEPARTMENT_PRIVATE,
+  zoneDeepQuestions,
   DIMENSIONS,
   DIM_OPTIONS,
   MOOD_WORDS,
@@ -16,82 +17,76 @@ import { CHOICE_REACTIONS, HAPPY_CHOICES, HAPPY_WORDS, SCALE_REACTIONS, WORD_REA
 
 const ids = (zone: ZoneId[]) => visibleSections(zone).map((s) => s.id);
 const zoneSections = SECTIONS.filter((s) => s.showIf);
-const allQuestions = SECTIONS.flatMap((s) => s.questions);
+const allQuestions = [
+  ...SECTIONS.flatMap((s) => s.questions),
+  ...ZONES.flatMap((z) => zoneDeepQuestions(z.id)),
+];
 
-describe("secțiunile care se arată", () => {
-  it("arată doar secțiunile comune când nu e bifat nimic", () => {
-    // Un singur final: "ce schimbăm la #22" a fost topit în "la final".
-    expect(ids([])).toEqual(["tine", "stare", "program", "echipa", "final"]);
+describe("aceleași pagini pentru toată lumea", () => {
+  it("are șase secțiuni, oricâte direcții a bifat cineva", () => {
+    // Înainte, fiecare bifă dădea o pagină: cine atinsese șapte zone abandona
+    // pe drum ("am ajuns la 11 din 20", la testare). Acum detaliul pe zone stă
+    // într-o singură pagină, opțională.
+    expect(SECTIONS.map((s) => s.id)).toEqual([
+      "tine",
+      "stare",
+      "program",
+      "echipa",
+      "detaliu",
+      "final",
+    ]);
+    expect(visibleSections([])).toHaveLength(6);
   });
 
-  it("fiecare direcție bifată aduce exact o secțiune, a ei", () => {
-    for (const z of ZONES) {
-      const proprii = ids([z.id]).filter((id) => !ids([]).includes(id));
-      expect(proprii, `direcția ${z.label}`).toEqual([z.id]);
-    }
+  it("pagina de detaliu nu cere nimic", () => {
+    const detaliu = SECTIONS.find((s) => s.id === "detaliu")!;
+    expect(requiredIds([detaliu])).toEqual([]);
   });
 
-  it("nu întreabă un departament despre treaba altuia", () => {
-    // Cazul concret al lui Anuța: foto-video nu primește întrebări despre
-    // tehnicul de la gale, despre transporturi sau despre bani.
-    const fotovideo = ids(["fotovideo"]);
-    expect(fotovideo).toContain("fotovideo");
-    for (const strain of ["tehnic_in", "tehnic_out", "transporturi", "financiar", "cazari"])
-      expect(fotovideo).not.toContain(strain);
-  });
-
-  it("două direcții bifate dau două secțiuni, în ordinea din listă", () => {
-    expect(ids(["mese", "cazari"])).toEqual(ids(["cazari", "mese"]));
-    expect(ids(["cazari", "mese"]).filter((id) => !ids([]).includes(id))).toEqual(["cazari", "mese"]);
-  });
-
-  it("arată tot cuiva care a bifat toate direcțiile", () => {
-    expect(ids(ZONES.map((z) => z.id))).toHaveLength(SECTIONS.length);
+  it("nu mai există nicio secțiune care depinde de bife", () => {
+    expect(SECTIONS.filter((s) => s.showIf)).toEqual([]);
   });
 });
 
-describe("direcțiile", () => {
-  it("fiecare bifă are o secțiune și fiecare secțiune are o bifă", () => {
-    expect(zoneSections.map((s) => s.id).sort()).toEqual(ZONES.map((z) => z.id).sort());
-  });
-
-  it("lista de bifat e una singură, fără dubluri și fără capete de grup", () => {
-    // Împărțirea pe departamente ar sugera că bifezi unde ești încadrat,
-    // nu de ce te-ai ocupat efectiv.
-    const ids = ZONES.map((z) => z.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(ZONES.length).toBe(22);
-  });
-
-  it("fiecare direcție începe cu aceleași patru întrebări, în aceeași ordine", () => {
-    // Welcome packs are o a doua întrebare deschisă (conținut, plus montarea
-    // lor). Restul au exact patru. Ordinea nu se schimbă la nimeni.
-    for (const s of zoneSections) {
-      const tipuri = s.questions.map((q) => q.type);
-      expect(tipuri.slice(0, 4), `direcția ${s.id}`).toEqual(["matrix", "items", "items", "long"]);
-      expect(tipuri.slice(4), `direcția ${s.id}`).toEqual(
-        s.id === "welcomepacks" ? ["long"] : [],
-      );
+describe("întrebările unei zone", () => {
+  it("fiecare zonă are aceleași patru întrebări, în aceeași ordine", () => {
+    for (const z of ZONES) {
+      const tipuri = zoneDeepQuestions(z.id).map((q) => q.type);
+      expect(tipuri.slice(0, 4), `zona ${z.label}`).toEqual(["matrix", "items", "items", "long"]);
+      // Welcome packs are o a doua întrebare deschisă: conținut, plus montarea.
+      expect(tipuri.slice(4), `zona ${z.label}`).toEqual(z.id === "welcomepacks" ? ["long"] : []);
     }
   });
 
-  it("listele au același număr de rânduri, ca să fie comparabile între direcții", () => {
-    const slots = zoneSections.flatMap((s) =>
-      s.questions.filter((q) => q.type === "items").map((q) => (q.type === "items" ? q.slots : 0)),
+  it("id-urile sunt prefixate cu zona, ca să nu se suprascrie în jsonb", () => {
+    for (const z of ZONES)
+      for (const q of zoneDeepQuestions(z.id))
+        expect(q.id.startsWith(`${z.id}_`), `${q.id} nu e prefixat cu ${z.id}`).toBe(true);
+  });
+
+  it("listele au același număr de rânduri, ca să fie comparabile între zone", () => {
+    const slots = ZONES.flatMap((z) =>
+      zoneDeepQuestions(z.id)
+        .filter((q) => q.type === "items")
+        .map((q) => (q.type === "items" ? q.slots : 0)),
     );
     expect(new Set(slots)).toEqual(new Set([2]));
   });
 
-  it("întrebarea deschisă e diferită la fiecare direcție", () => {
-    // Altfel n-am fi întrebat nimic specific, doar același lucru de 22 de ori.
-    const deschise = zoneSections.map(
-      (s) => s.questions.filter((q) => q.type === "long").map((q) => q.label)[0],
+  it("întrebarea deschisă e diferită la fiecare zonă", () => {
+    const deschise = ZONES.map(
+      (z) => zoneDeepQuestions(z.id).filter((q) => q.type === "long")[0]?.label,
     );
     expect(new Set(deschise).size).toBe(deschise.length);
   });
 
-  it("nimic nu e obligatoriu în secțiunile de direcție", () => {
-    expect(requiredIds(zoneSections)).toEqual([]);
+  it("nu întreabă un departament despre treaba altuia", () => {
+    // Cazul lui Anuța: cine alege foto-video nu vede întrebări despre tehnic.
+    const foto = zoneDeepQuestions("fotovideo")
+      .map((q) => q.label.toLowerCase())
+      .join(" ");
+    expect(foto).not.toContain("tehnic");
+    expect(foto).not.toContain("transport");
   });
 });
 
@@ -164,17 +159,14 @@ describe("fără întrebări care se repetă", () => {
 });
 
 describe("lungimea formularului", () => {
-  it("rămâne scurt pentru cine a lucrat pe o direcție", () => {
-    expect(fieldCount(["fotovideo"])).toBeLessThanOrEqual(34);
+  it("are aceleași câmpuri pentru toată lumea", () => {
+    // Pagina de detaliu are o singură întrebare; ce apare în ea depinde de
+    // câte zone alege omul acolo, și e opțional.
+    expect(fieldCount([])).toBeLessThanOrEqual(30);
   });
 
-  it("rămâne rezonabil pentru un coordonator cu trei direcții", () => {
-    expect(fieldCount(["cazari", "mese", "welcomepacks"])).toBeLessThanOrEqual(45);
-  });
-
-  it("crește doar cu direcțiile bifate", () => {
-    expect(fieldCount(["piata"])).toBeGreaterThan(fieldCount([]));
-    expect(fieldCount(["piata", "ateliere"])).toBeGreaterThan(fieldCount(["piata"]));
+  it("o zonă aleasă în detaliu adaugă patru întrebări, nu o pagină", () => {
+    expect(zoneDeepQuestions("piata")).toHaveLength(4);
   });
 });
 

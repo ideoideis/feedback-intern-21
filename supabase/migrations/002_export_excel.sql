@@ -13,6 +13,8 @@
 -- ── Reparații de schemă, pentru tabelele create înainte ────────────────────
 alter table public.feedback_intern_21 add column if not exists departament text;
 alter table public.feedback_intern_21 add column if not exists scala_program smallint;
+-- zonele despre care omul a intrat în detaliu, dintre cele bifate
+alter table public.feedback_intern_21 add column if not exists zone_deep text[] default '{}';
 
 -- Rolul nu se mai cere (identifica exact o persoană). Dacă tabelul a fost creat
 -- cu `rol not null`, inserările ar eșua, așa că scoatem constrângerea.
@@ -74,6 +76,7 @@ select
   f.departament                                   as "Departament",
   f.editii                                        as "A câta ediție",
   array_to_string(f.zone, ', ')                   as "De ce s-a ocupat",
+  array_to_string(f.zone_deep, ', ')              as "Zone detaliate",
   f.answers ->> 'zone_altele'                     as "Altceva, anume",
 
   -- cum a trecut prin festival

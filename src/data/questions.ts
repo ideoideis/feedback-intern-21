@@ -215,9 +215,20 @@ export type Question =
       required?: boolean;
     }
   | {
-      /** Bifele care decid ce secțiuni apar mai departe. Apare o singură dată. */
+      /** Bifele cu tot ce a lucrat. Apare o singură dată. */
       type: "zones";
       id: "zone";
+      label: string;
+      help?: string;
+      required?: boolean;
+    }
+  | {
+      /**
+       * Pagina opțională de detaliu: alegi una sau mai multe zone dintre cele
+       * bifate, și întrebările lor apar aici, în aceeași pagină.
+       */
+      type: "zonedeep";
+      id: "zone_deep";
       label: string;
       help?: string;
       required?: boolean;
@@ -487,12 +498,19 @@ const EXAMPLES: Record<string, { keep: string; change: string }> = {
   altele: { keep: "ce a funcționat acolo", change: "ce nu a funcționat acolo" },
 };
 
-const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
-  id: z.key,
-  title: z.title,
-  showIf: [z.key],
-  optionalNote: `Secțiunea asta apare pentru că ai bifat "${z.title}".`,
-  questions: [
+/** Titlul zonei, pentru capul de bloc din pagina de detaliu. */
+export const zoneTitle = (id: ZoneId): string =>
+  ZONE_SECTIONS.find((z) => z.key === id)?.title ?? id;
+
+/**
+ * Întrebările unei zone: grila de diagnostic, două de păstrat, două de schimbat,
+ * una deschisă, proprie zonei. Apar în pagina de detaliu, doar pentru zonele pe
+ * care omul le alege acolo.
+ */
+export const zoneDeepQuestions = (id: ZoneId): Question[] => {
+  const z = ZONE_SECTIONS.find((x) => x.key === id);
+  if (!z) return [];
+  return [
     {
       type: "matrix",
       id: `${z.key}_diag`,
@@ -523,8 +541,8 @@ const zoneSection = (z: (typeof ZONE_SECTIONS)[number]): Section => ({
     ...(z.open2
       ? [{ type: "long" as const, id: `${z.key}_context2`, label: z.open2.label, help: z.open2.help }]
       : []),
-  ],
-});
+  ];
+};
 
 export const SECTIONS: Section[] = [
   {
@@ -557,7 +575,7 @@ export const SECTIONS: Section[] = [
         type: "zones",
         id: "zone",
         label: "De ce te-ai ocupat tu la #21?",
-        help: "Bifează tot ce ai lucrat efectiv. Pentru fiecare bifă primești o secțiune scurtă.",
+        help: "Bifează tot ce ai lucrat efectiv, chiar dacă ai atins multe. Nu primești o pagină pentru fiecare.",
         required: true,
       },
     ],
@@ -610,8 +628,6 @@ export const SECTIONS: Section[] = [
       },
     ],
   },
-
-  ...ZONE_SECTIONS.map(zoneSection),
 
   {
     id: "program",
@@ -710,6 +726,29 @@ export const SECTIONS: Section[] = [
         id: "claritate_de_ce",
         label: "De ce ai dat nota asta?",
         help: "Dacă a fost un moment în care n-ai știut cine decide sau cine face, scrie-l aici.",
+      },
+    ],
+  },
+
+  {
+    /**
+     * Pagina opțională de detaliu.
+     *
+     * Înainte, fiecare bifă dădea o secțiune: cine a atins șapte zone primea
+     * șapte pagini și abandona la a treia (chiar așa s-a întâmplat la testare,
+     * "am ajuns la 11 din 20"). Acum e o singură pagină, opțională: alegi o zonă
+     * și îi apar întrebările aici, alegi două și apar amândouă. Cine sare peste,
+     * dă un tap și merge mai departe.
+     */
+    id: "detaliu",
+    title: "o zonă în detaliu",
+    intro: "Opțional, dar aici iese cel mai folositor feedback. Alege o zonă, sau mai multe dacă ai chef.",
+    questions: [
+      {
+        type: "zonedeep",
+        id: "zone_deep",
+        label: "Despre ce zonă vrei să ne spui mai mult?",
+        help: "Doar dintre cele bifate. Poți sări peste, poți alege una, poți alege mai multe.",
       },
     ],
   },

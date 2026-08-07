@@ -18,8 +18,10 @@ create table if not exists public.feedback_intern_21 (
                                    -- prefer să nu spun
   editii text,                     -- 'prima' | 'a doua' | 'a treia' | 'mai multe'
 
-  -- direcțiile bifate în prima secțiune; ele decid ce secțiuni i s-au arătat
+  -- tot ce a lucrat (bifele din prima secțiune)
   zone text[] not null default '{}',
+  -- zonele despre care a intrat în detaliu, în pagina opțională
+  zone_deep text[] not null default '{}',
   sectiuni text[] not null default '{}',
 
   -- 'da' | 'da, dar în alt rol' | 'nu știu încă' | 'probabil nu'
