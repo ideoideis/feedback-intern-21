@@ -552,7 +552,7 @@ export const SECTIONS: Section[] = [
       {
         type: "choice",
         id: "departament",
-        label: "Din ce departament ai făcut parte, în principal?",
+        label: "Din ce departament ai făcut parte?",
         options: [...DEPARTMENTS, DEPARTMENT_PRIVATE],
         required: true,
       },
