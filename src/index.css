@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Söhne, litera de brand a festivalului */
+@font-face {
+  font-family: 'Söhne';
+  src: url('./assets/fonts/soehne-buch.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Söhne';
+  src: url('./assets/fonts/soehne-halbfett.woff2') format('woff2');
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    /* Brandul festivalului */
+    --brand-red: 340.3 100% 45.3%;    /* PANTONE 1925 C · #E7004C · C3 M100 Y63 K0 */
+    --brand-near-black: 210 4% 15%;   /* #222324 */
+    --brand-near-black-2: 233 7% 19%; /* #2c2d34 */
+    --brand-white: 0 0% 100%;
+    --brand-off-white: 0 0% 96%;
+
+    /* Tokenii sistemului de design */
+    --background: var(--brand-white);
+    --foreground: var(--brand-near-black);
+
+    --card: var(--brand-white);
+    --card-foreground: var(--brand-near-black);
+
+    --popover: var(--brand-white);
+    --popover-foreground: var(--brand-near-black);
+
+    --primary: var(--brand-red);
+    --primary-foreground: var(--brand-white);
+
+    --secondary: var(--brand-near-black);
+    --secondary-foreground: var(--brand-white);
+
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: var(--brand-red);
+    --accent-foreground: var(--brand-white);
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 78%;
+    --ring: var(--brand-red);
+
+    --radius: 0rem; /* Fără colțuri rotunjite */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Söhne', 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Söhne', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fără colțuri rotunjite nicăieri */
+  *, *::before, *::after {
+    border-radius: 0 !important;
+  }
+
+  /* Pe iOS, font-size sub 16px la inputuri face zoom automat la focus */
+  input, textarea, select {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* Eticheta mică de deasupra titlurilor */
+.micro-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Linia roșie de accent */
+.red-line {
+  display: block;
+  height: 2px;
+  background-color: hsl(var(--brand-red));
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--brand-red));
+  outline-offset: 2px;
+}
+
+/* ── Inimioarele ──────────────────────────────────────────────────────────
+   Se ridică și dispar. Traiectoria (--dx) și rotația vin din JS, ca fiecare
+   inimioară să plece în altă parte. */
+@keyframes heart-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1) rotate(var(--rot, 8deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), -260%) scale(0.9) rotate(var(--rot, 8deg));
+  }
+}
+
+.heart {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+  color: hsl(var(--brand-red));
+  animation: heart-float var(--dur, 1.4s) cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Clătinatul etichetei, când o apeși */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-5deg); }
+  40% { transform: rotate(4deg); }
+  60% { transform: rotate(-3deg); }
+  80% { transform: rotate(2deg); }
+}
+
+.wiggle {
+  animation: wiggle 0.6s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart { display: none; }
+  .wiggle { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

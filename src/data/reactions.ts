@@ -1,0 +1,91 @@
+/**
+ * Formularul răspunde înapoi. Când cineva dă o notă sau alege un cuvânt, apare
+ * un rând mic sub întrebare, ca într-o conversație.
+ *
+ * De ce: un formular de 15 minute completat în tăcere e o corvoadă. Unul care
+ * confirmă că ai fost auzit se termină. Textele sunt scurte și oneste: la note
+ * mici recunoaștem problema, nu ne scuzăm și nu facem glume.
+ */
+
+/** Reacție per notă (1 la 5), pe id-ul întrebării de tip scale. */
+export const SCALE_REACTIONS: Record<string, Record<number, string>> = {
+  s_claritate: {
+    1: "notat. exact asta trebuie reparat la #22.",
+    2: "prea puțin clar. spune-ne mai jos unde s-a rupt.",
+    3: "deci a funcționat, dar pe ghicit.",
+    4: "bine. ce ar fi lipsit ca să fie 5?",
+    5: "rar și frumos.",
+  },
+  s_sustinere: {
+    1: "nu ar fi trebuit să fii pe cont propriu. ne pare rău.",
+    2: "prea puțin sprijin. scrie-ne unde.",
+    3: "uneori da, uneori nu.",
+    4: "bine, deci a fost cine să prindă.",
+    5: "asta ne bucură cel mai mult.",
+  },
+  s_epuizare: {
+    1: "te-am stors. ne pare rău.",
+    2: "prea aproape de gol.",
+    3: "cam așa se termină un festival.",
+    4: "sună sănătos.",
+    5: "atunci mai avem loc să creștem.",
+  },
+  s_comunicare: {
+    1: "haos, am înțeles.",
+    2: "s-a auzit. și de aici.",
+    3: "a mers pe voce tare și noroc.",
+    4: "aproape.",
+    5: "impresionant, sincer.",
+  },
+  s_logistica: {
+    1: "deci a ținut cu scotch.",
+    2: "pe muchie, cum ziceam.",
+    3: "a ținut, dar cu efort.",
+    4: "solid.",
+    5: "cineva a făcut o treabă foarte bună.",
+  },
+  s_general: {
+    1: "ne pare rău. mulțumim că ai spus-o direct.",
+    2: "mulțumim pentru sinceritate. avem de muncă.",
+    3: "ok. avem de muncă.",
+    4: "ne bucurăm.",
+    5: "mulțumim. serios.",
+  },
+};
+
+/** Reacție la cuvântul ales, în secțiunea de stare. */
+export const WORD_REACTIONS: Record<string, string> = {
+  "energizat/ă": "asta căutăm.",
+  "copleșit/ă": "prea mult, prea repede. notat.",
+  "util/ă": "ai fost.",
+  "mereu pe fugă": "știm senzația.",
+  "în control": "te invidiem.",
+  "invizibil/ă": "asta nu ar trebui să se întâmple. mulțumim că ai spus.",
+  "susținut/ă": "bine.",
+  "frustrat/ă": "spune-ne pe ce, mai jos.",
+  "mândru/ă": "și noi de tine.",
+  "singur/ă în treaba mea": "hai să nu se repete la #22.",
+  "conectat/ă cu echipa": "cel mai bun semn.",
+  "epuizat/ă": "ai nevoie de o vacanță, nu de un formular.",
+  "nesigur/ă pe ce trebuie făcut": "asta e treaba noastră, nu a ta.",
+  "în locul potrivit": "atunci te vrem și la #22.",
+};
+
+/** Cuvintele la care iese un puf de inimioare. */
+export const HAPPY_WORDS = [
+  "energizat/ă",
+  "util/ă",
+  "în control",
+  "susținut/ă",
+  "mândru/ă",
+  "conectat/ă cu echipa",
+  "în locul potrivit",
+];
+
+/** Rândul de încurajare la trecerea prin secțiuni (după numărul secțiunii). */
+export const MILESTONES: Record<number, string> = {
+  2: "merge repede, nu?",
+  3: "o treime. respiră.",
+  5: "jumătate. partea grea a trecut.",
+  7: "aproape.",
+};
