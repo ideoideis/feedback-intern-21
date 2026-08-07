@@ -215,20 +215,12 @@ export type Question =
       required?: boolean;
     }
   | {
-      /** Bifele cu tot ce a lucrat. Apare o singură dată. */
-      type: "zones";
-      id: "zone";
-      label: string;
-      help?: string;
-      required?: boolean;
-    }
-  | {
       /**
        * Pagina opțională de detaliu: alegi una sau mai multe zone dintre cele
        * bifate, și întrebările lor apar aici, în aceeași pagină.
        */
       type: "zonedeep";
-      id: "zone_deep";
+      id: "zone";
       label: string;
       help?: string;
       required?: boolean;
@@ -571,13 +563,6 @@ export const SECTIONS: Section[] = [
         label: "A câta ediție a fost pentru tine?",
         options: ["prima", "a doua", "a treia", "mai multe"],
       },
-      {
-        type: "zones",
-        id: "zone",
-        label: "De ce te-ai ocupat tu la #21?",
-        help: "Bifează tot ce ai lucrat efectiv, chiar dacă ai atins multe. Nu primești o pagină pentru fiecare.",
-        required: true,
-      },
     ],
   },
 
@@ -741,14 +726,15 @@ export const SECTIONS: Section[] = [
      * dă un tap și merge mai departe.
      */
     id: "detaliu",
-    title: "o zonă în detaliu",
-    intro: "Opțional, dar aici iese cel mai folositor feedback. Alege o zonă, sau mai multe dacă ai chef.",
+    title: "feedback pe o zonă anume",
+    intro:
+      "Pagina asta e opțională. Alegi o zonă a festivalului din care ai făcut parte și ne spui la obiect ce a fost cu ea. Dacă nu vrei, apasă continuă și mergi la ultima pagină.",
     questions: [
       {
         type: "zonedeep",
-        id: "zone_deep",
-        label: "Despre ce zonă vrei să ne spui mai mult?",
-        help: "Doar dintre cele bifate. Poți sări peste, poți alege una, poți alege mai multe.",
+        id: "zone",
+        label: "Pe ce zonă vrei să dai feedback detaliat?",
+        help: "Apasă o zonă și îți apar întrebările ei imediat sub. Poți alege mai multe, dacă ai lucrat pe mai multe. Poți să nu alegi niciuna.",
       },
     ],
   },

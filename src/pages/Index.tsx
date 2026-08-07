@@ -158,9 +158,8 @@ export default function Index() {
     }
   }, [answers]);
 
-  const zone = (answers.zone as ZoneId[]) ?? [];
-  // Aceleași șase pagini pentru toată lumea. Detaliul pe zone stă într-una
-  // singură, opțională, și crește doar cât vrea omul.
+  // Aceleași șase pagini pentru toată lumea. Zonele nu se mai bifează la
+  // început: se aleg direct în pagina de detaliu, care e opțională.
   const sections = SECTIONS;
   const questionsOf = (s: Section) => s.questions;
 
@@ -183,8 +182,7 @@ export default function Index() {
     for (const q of questionsOf(s)) {
       if (!q.required) continue;
       if (!isEmpty(answers[q.id])) continue;
-      if (q.type === "zones") e[q.id] = "bifează cel puțin o direcție";
-      else if (q.type === "words") e[q.id] = "alege cel puțin un cuvânt";
+      if (q.type === "words") e[q.id] = "alege cel puțin un cuvânt";
       else if (q.type === "items") e[q.id] = "scrie cel puțin unul";
       else e[q.id] = REQUIRED;
     }
@@ -243,8 +241,7 @@ export default function Index() {
       nume: ((answers.nume as string) ?? "").trim() || null,
       departament: (answers.departament as string) ?? null,
       editii: (answers.editii as string) ?? null,
-      zone,
-      zone_deep: (answers.zone_deep as ZoneId[]) ?? [],
+      zone: (answers.zone as ZoneId[]) ?? [],
       sectiuni: sections.map((s) => s.id),
       revenire: (answers.revenire as string) ?? null,
       scala_claritate: (answers.s_claritate as number) ?? null,

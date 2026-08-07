@@ -38,6 +38,11 @@ describe("aceleași pagini pentru toată lumea", () => {
     expect(visibleSections([])).toHaveLength(6);
   });
 
+  it("nu mai există bife obligatorii de implicare pe prima pagină", () => {
+    const tine = SECTIONS.find((s) => s.id === "tine")!;
+    expect(tine.questions.map((q) => q.id)).toEqual(["nume", "departament", "editii"]);
+  });
+
   it("pagina de detaliu nu cere nimic", () => {
     const detaliu = SECTIONS.find((s) => s.id === "detaliu")!;
     expect(requiredIds([detaliu])).toEqual([]);
@@ -106,9 +111,9 @@ describe("grila de diagnostic", () => {
 
 describe("întrebările obligatorii", () => {
   it("cere doar strictul necesar, toate rapide", () => {
+    // Zonele nu se mai bifează la început: se aleg opțional, în pagina de detaliu.
     expect(requiredIds(visibleSections([]))).toEqual([
       "departament",
-      "zone",
       "stare_cuvinte",
       "volum",
       "s_claritate",

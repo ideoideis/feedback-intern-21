@@ -426,66 +426,6 @@ function Matrix({
   );
 }
 
-/** Bifele care decid ce secțiuni urmează. Grupate, ca să se scaneze din ochi. */
-function ZonePicker({
-  value,
-  onChange,
-  invalid,
-}: {
-  value: ZoneId[];
-  onChange: (v: ZoneId[]) => void;
-  invalid?: boolean;
-}) {
-  const toggle = (id: ZoneId) => {
-    const next = value.includes(id) ? value.filter((z) => z !== id) : [...value, id];
-    onChange(next);
-    // Easter egg pentru cine chiar a fost peste tot.
-    if (next.length === ZONES.length) toast("ai bifat tot. ai dormit vreodată?");
-  };
-
-  return (
-    <div
-      className={cn(
-        "grid gap-2 sm:grid-cols-2",
-        invalid && "ring-2 ring-primary ring-offset-4",
-      )}
-    >
-      {ZONES.map((z) => {
-        const active = value.includes(z.id);
-        return (
-          <button
-            key={z.id}
-            type="button"
-            onClick={() => toggle(z.id)}
-            aria-pressed={active}
-            className={cn(
-              "flex items-start gap-3 border p-3 text-left transition-colors",
-              active ? "border-primary bg-primary/5" : "border-input bg-background hover:border-primary",
-            )}
-          >
-            <span
-              className={cn(
-                "mt-0.5 flex h-5 w-5 flex-none items-center justify-center border",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-input",
-              )}
-            >
-              {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-            </span>
-            <span>
-              <span className={cn("block font-semibold leading-tight", active && "text-primary")}>
-                {z.label}
-              </span>
-              {z.hint && (
-                <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">{z.hint}</span>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * Pagina de detaliu: alegi zone dintre cele bifate și întrebările lor apar aici.
  *
@@ -494,13 +434,11 @@ function ZonePicker({
  * nu alege nimic și merge mai departe.
  */
 function ZoneDeep({
-  bifate,
   value,
   onChange,
   answers,
   set,
 }: {
-  bifate: ZoneId[];
   value: ZoneId[];
   onChange: (v: ZoneId[]) => void;
   answers: Answers;
@@ -520,13 +458,13 @@ function ZoneDeep({
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {bifate.map((id) => {
-          const active = value.includes(id);
+        {ZONES.map((z) => {
+          const active = value.includes(z.id);
           return (
             <button
-              key={id}
+              key={z.id}
               type="button"
-              onClick={(e) => toggle(id, e.currentTarget)}
+              onClick={(e) => toggle(z.id, e.currentTarget)}
               aria-pressed={active}
               className={cn(
                 "border px-4 py-2.5 text-sm font-medium transition-colors",
@@ -535,7 +473,7 @@ function ZoneDeep({
                   : "border-input bg-background hover:border-primary hover:text-primary",
               )}
             >
-              {ZONES.find((z) => z.id === id)?.label ?? id}
+              {z.label}
             </button>
           );
         })}
@@ -543,7 +481,7 @@ function ZoneDeep({
 
       {value.length === 0 && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Dacă nu alegi nimic, mergi direct mai departe. Nu se supără nimeni.
+          Nimic ales, nimic de completat. Apeși continuă și mergi mai departe.
         </p>
       )}
 
@@ -670,7 +608,6 @@ export function Field({
 
         {q.type === "zonedeep" && (
           <ZoneDeep
-            bifate={(answers.zone as ZoneId[]) ?? []}
             value={(raw as ZoneId[]) ?? []}
             onChange={(v) => set(q.id, v)}
             answers={answers}
@@ -678,24 +615,6 @@ export function Field({
           />
         )}
 
-        {q.type === "zones" && (
-          <>
-            <ZonePicker
-              value={(raw as ZoneId[]) ?? []}
-              onChange={(v) => set(q.id, v)}
-              invalid={!!error}
-            />
-            {((raw as ZoneId[]) ?? []).includes("altele") && (
-              <input
-                type="text"
-                value={(answers.zone_altele as string) ?? ""}
-                onChange={(e) => set("zone_altele", e.target.value)}
-                placeholder="de ce anume te-ai ocupat?"
-                className={cn(inputClass(false), "mt-3")}
-              />
-            )}
-          </>
-        )}
       </div>
 
       {error && <p className="mt-2 text-sm font-medium text-primary">{error}</p>}
