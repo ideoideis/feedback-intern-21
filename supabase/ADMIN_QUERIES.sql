@@ -22,8 +22,8 @@ select count(*) as raspunsuri,
 from public.feedback_intern_21;
 
 -- ── 2. Toate răspunsurile, pe scurt ───────────────────────────────────────
-select created_at, coalesce(nume, '(anonim)') as nume, rol, editii, zone, revenire,
-       scala_claritate, scala_comunicare, scala_logistica,
+select created_at, coalesce(nume, '(anonim)') as nume, departament, rol, editii, zone, revenire,
+       scala_claritate, scala_comunicare, scala_productie,
        scala_sustinere, scala_epuizare, scala_general
 from public.feedback_intern_21
 order by created_at desc;
@@ -31,7 +31,7 @@ order by created_at desc;
 -- ── 3. Mediile scalelor (cifrele pe care le compari între ediții) ──────────
 select round(avg(scala_claritate), 2)  as claritate_responsabilitati,
        round(avg(scala_comunicare), 2) as comunicare_timp_real,
-       round(avg(scala_logistica), 2)  as logistica,
+       round(avg(scala_productie), 2)  as productie,
        round(avg(scala_sustinere), 2)  as sprijin_cand_a_fost_greu,
        round(avg(scala_epuizare), 2)   as energie_la_final,
        round(avg(scala_general), 2)    as satisfactie_generala,
@@ -44,21 +44,38 @@ from public.feedback_intern_21, unnest(zone) as z
 group by z
 order by oameni desc;
 
+-- ── 4b. Pe departamente: câți au răspuns și cum se simt ───────────────────
+-- Aici se vede dacă un departament întreg e nemulțumit, nu doar o persoană.
+select coalesce(departament, '(fără răspuns)') as departament,
+       count(*) as raspunsuri,
+       round(avg(scala_claritate), 2) as claritate,
+       round(avg(scala_epuizare), 2)  as energie_la_final,
+       round(avg(scala_general), 2)   as satisfactie,
+       count(*) filter (where revenire in ('probabil nu', 'nu știu încă')) as nesiguri_pe_22
+from public.feedback_intern_21
+group by departament
+order by satisfactie nulls last;
+
 -- ── 5. CE PĂSTRĂM / CE SCHIMBĂM, pe zone ──────────────────────────────────
 -- Toate lucrurile scurte scrise de toată lumea, grupate pe zonă. De aici ies
 -- deciziile: ce apare la mai mulți oameni e o prioritate, nu o părere.
 select case when a.key like '%\_keep' then 'păstrăm' else 'schimbăm' end as tip,
        case split_part(a.key, '_', 1)
-         when 'piata'    then 'Piața'
-         when 'trupe'    then 'trupele și participanții'
-         when 'ateliere' then 'atelierele'
-         when 'invitati' then 'invitați, mentori, juriu'
-         when 'ev'       then 'evenimente proprii'
-         when 'com'      then 'comunicare și promovare'
-         when 'vol'      then 'voluntari'
-         when 'part'     then 'parteneri și finanțare'
-         when 'oras'     then 'orașul și instituțiile'
-         when 'loc'      then 'locații și logistică'
+         when 'outdoor'     then 'evenimente outdoor și Piața'
+         when 'indoor'      then 'evenimente indoor și gale'
+         when 'ateliere'    then 'atelierele'
+         when 'trupe'       then 'trupele și participanții'
+         when 'comunitate'  then 'comunitate și murale'
+         when 'scenografie' then 'scenografia'
+         when 'tehnic'      then 'tehnicul'
+         when 'productie'   then 'producție și achiziții'
+         when 'cazari'      then 'cazări, mese, welcome packs'
+         when 'transport'   then 'transporturile'
+         when 'voluntari'   then 'voluntarii'
+         when 'com'         then 'comunicare și promovare'
+         when 'fotovideo'   then 'foto și video'
+         when 'financiar'   then 'finanțări și sponsorizări'
+         when 'website'     then 'website și ticketing'
          else split_part(a.key, '_', 1)
        end as zona,
        trim(item) as lucru,
@@ -127,6 +144,7 @@ order by de_cati_oameni desc;
 -- Astea se discută în echipa principală, nu se pun într-un raport.
 select coalesce(nume, '(anonim)') as nume, rol,
        scala_epuizare as energie, scala_sustinere as sprijin, revenire,
+       departament,
        answers ->> 'moment_greu' as momentul_greu,
        answers ->> 'orice' as altceva
 from public.feedback_intern_21

@@ -3,20 +3,26 @@
 Formular de feedback pentru echipa internă, completat după festival.
 Înlocuiește Google Form-ul folosit la edițiile trecute și rezolvă problema lui
 principală: echipa e împărțită pe departamente și direcții, iar nimeni n-a văzut
-tot festivalul. Cine a făcut foto-video nu are ce să spună despre tehnicul din
-Piață, deci nici nu e întrebat.
+tot festivalul. Cine a făcut foto-video nu are ce să spună despre sunetul de la
+gale, deci nici nu e întrebat.
+
+**Pentru cine:** Board, Artistic, Welcoming, Comunicare, Tehnic, Producție,
+Financiar, Website. NU pentru voluntari, juniori și shtanga boyz, care au nevoie
+de alt formular, cu alte întrebări.
 
 **Live:** https://ideoideis.github.io/feedback-intern-21/
 
 ## Cum e gândit
 
-- **Formular construit din bife.** În prima secțiune fiecare bifează zonele în
-  care a fost implicat (Piața, trupele, atelierele, gale, invitați, alte
-  evenimente, logistică, cazare, comunicare, voluntari, parteneri și finanțare,
-  orașul și instituțiile). De acolo se construiește un formular numai al lui: sar
-  secțiuni întregi, iar grila de note arată doar zonele pe care le-a putut vedea.
-  Fiecare zonă mare are o secțiune a ei, deci niciun departament nu rămâne fără
-  loc unde să vorbească.
+- **Formular construit din bife.** Prima secțiune întreabă departamentul (una
+  dintre cele opt din structura echipei, ca să se poată filtra în Excel) și
+  zonele în care a fost implicat: evenimente outdoor și Piața, evenimente indoor
+  și gale, ateliere, relații participanți și trupe, dezvoltare comunitară și
+  murale, scenografie, tehnic, producție și achiziții, cazări și mese,
+  transporturi, voluntari, comunicare și promovare, foto și video, finanțări și
+  sponsorizări, website și ticketing. Fiecare are o secțiune a ei, deci niciun
+  departament nu rămâne fără loc unde să vorbească, și nimeni nu primește
+  întrebările altcuiva.
 - **Răspunsuri care se pot număra.** Pentru fiecare zonă cerem lucruri scurte și
   separate, "de păstrat" și "de schimbat", la fel formulate în toate zonele. Zece
   oameni care scriu fiecare două rânduri scurte dau o listă de priorități; zece
@@ -32,11 +38,11 @@ Piață, deci nici nu e întrebat.
   au simțit, cu cât au terminat ca energie și dacă vor să revină la #22. Ultima e
   cel mai bun indicator agregat pe care îl avem.
 - **Scale de la 1 la 5** pentru claritatea responsabilităților, comunicare,
-  logistică, sprijin, energie și satisfacție generală, plus grila pe zone. La
+  producție, sprijin, energie și satisfacție generală, plus grila pe zone. La
   edițiile trecute totul era text liber, deci nu se putea compara nimic între ani.
   Astea se pot.
-- **Aproape totul e opțional.** Obligatorii sunt doar șase lucruri, toate rapide:
-  rolul, zonele, cele trei cuvinte, două scale și topul de la final. Mai puține
+- **Aproape totul e opțional.** Obligatorii sunt doar șapte lucruri, toate rapide:
+  departamentul, rolul, zonele, cele trei cuvinte, două scale și topul de la final. Mai puține
   răspunsuri, dar sincere, bat un formular completat de silă.
 - **Numele e opțional.** Se poate completa anonim.
 - **Ciorna se salvează local** (localStorage) la fiecare tastă. Nu are nevoie de
@@ -123,8 +129,8 @@ Editor, în ordine:
    vederea `feedback_intern_21_excel`, pentru export.
 
 Răspunsurile intră toate în coloana `answers` (jsonb, cheia = id-ul întrebării
-din `questions.ts`). Separat există coloane pentru ce filtrăm sau mediem: `rol`,
-`zone`, `sectiuni`, `revenire` și cele șase scale. Așa poți schimba întrebările
+din `questions.ts`). Separat există coloane pentru ce filtrăm sau mediem: `departament`,
+`rol`, `zone`, `sectiuni`, `revenire` și cele șase scale. Așa poți schimba întrebările
 fără să strici tabelul.
 
 ### Export pentru Excel

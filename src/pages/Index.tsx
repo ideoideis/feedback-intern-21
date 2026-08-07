@@ -192,6 +192,7 @@ export default function Index() {
     setSubmitting(true);
     const { error } = await supabase.from(FEEDBACK_TABLE).insert({
       nume: ((answers.nume as string) ?? "").trim() || null,
+      departament: (answers.departament as string) ?? null,
       rol: ((answers.rol as string) ?? "").trim(),
       editii: (answers.editii as string) ?? null,
       zone,
@@ -199,7 +200,7 @@ export default function Index() {
       revenire: (answers.revenire as string) ?? null,
       scala_claritate: (answers.s_claritate as number) ?? null,
       scala_comunicare: (answers.s_comunicare as number) ?? null,
-      scala_logistica: (answers.s_logistica as number) ?? null,
+      scala_productie: (answers.s_productie as number) ?? null,
       scala_sustinere: (answers.s_sustinere as number) ?? null,
       scala_epuizare: (answers.s_epuizare as number) ?? null,
       scala_general: (answers.s_general as number) ?? null,

@@ -1,3 +1,5 @@
+import { DEPARTMENTS } from "./questions";
+
 /**
  * Formularul răspunde înapoi. Când cineva dă o notă sau alege un cuvânt, apare
  * un rând mic sub întrebare, ca într-o conversație.
@@ -37,7 +39,7 @@ export const SCALE_REACTIONS: Record<string, Record<number, string>> = {
     4: "aproape.",
     5: "impresionant, sincer.",
   },
-  s_logistica: {
+  s_productie: {
     1: "deci a ținut cu scotch.",
     2: "pe muchie, cum ziceam.",
     3: "a ținut, dar cu efort.",
@@ -96,6 +98,16 @@ export const CHOICE_REACTIONS: Record<string, Record<string, string>> = {
     "a treia": "începi să fii dintre cei vechi.",
     "mai multe": "veteran/ă. mulțumim că mai vii.",
   },
+  departament: {
+    Board: "voi ați dus greul. mulțumim.",
+    Artistic: "de la voi vine tot ce se vede pe scenă.",
+    Welcoming: "voi sunteți primii pe care îi vede toată lumea.",
+    Comunicare: "fără voi nu s-ar fi văzut nimic.",
+    Tehnic: "fără voi nu s-ar fi auzit nimic.",
+    Producție: "voi țineți tot în picioare.",
+    Financiar: "voi faceți posibil restul.",
+    Website: "mulțumim, chiar contează.",
+  },
   revenire: {
     da: "ne bucurăm. serios.",
     "da, dar în alt rol": "notat. hai să vorbim despre unde.",
@@ -105,7 +117,15 @@ export const CHOICE_REACTIONS: Record<string, Record<string, string>> = {
 };
 
 /** Variantele la care merg inimioarele. Restul primesc doar text. */
-export const HAPPY_CHOICES = ["prima", "a doua", "a treia", "mai multe", "da", "da, dar în alt rol"];
+export const HAPPY_CHOICES = [
+  "prima",
+  "a doua",
+  "a treia",
+  "mai multe",
+  "da",
+  "da, dar în alt rol",
+  ...DEPARTMENTS,
+];
 
 /** Rândul de încurajare la trecerea prin secțiuni (după numărul secțiunii). */
 export const MILESTONES: Record<number, string> = {

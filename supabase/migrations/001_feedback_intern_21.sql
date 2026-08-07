@@ -10,7 +10,9 @@ create table if not exists public.feedback_intern_21 (
   id uuid primary key default gen_random_uuid(),
 
   nume text,                       -- opțional: se poate completa anonim
-  rol text not null,               -- rolul / departamentul la #21
+  departament text,                -- Board | Artistic | Welcoming | Comunicare |
+                                   -- Tehnic | Producție | Financiar | Website
+  rol text not null,               -- rolul exact din structura echipei
   editii text,                     -- 'prima' | 'a doua' | 'a treia' | 'mai multe'
 
   -- zonele bifate în prima secțiune; ele decid ce secțiuni i s-au arătat
@@ -24,7 +26,7 @@ create table if not exists public.feedback_intern_21 (
   -- scalele 1 la 5 (null dacă persoana a sărit peste)
   scala_claritate smallint check (scala_claritate between 1 and 5),
   scala_comunicare smallint check (scala_comunicare between 1 and 5),
-  scala_logistica smallint check (scala_logistica between 1 and 5),
+  scala_productie smallint check (scala_productie between 1 and 5),
   scala_sustinere smallint check (scala_sustinere between 1 and 5),
   scala_epuizare smallint check (scala_epuizare between 1 and 5),
   scala_general smallint check (scala_general between 1 and 5),
