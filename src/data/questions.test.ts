@@ -110,16 +110,36 @@ describe("grila de diagnostic", () => {
 });
 
 describe("întrebările obligatorii", () => {
-  it("cere doar strictul necesar, toate rapide", () => {
-    // Zonele nu se mai bifează la început: se aleg opțional, în pagina de detaliu.
+  it("cere tot ce se răspunde repede, dar nu textul lung", () => {
+    // Oamenii sar peste ce e opțional, deci notele, alegerile și răspunsurile
+    // scurte care se pot număra sunt obligatorii. Textul lung rămâne la
+    // latitudinea fiecăruia: forțat, iese "nu știu".
     expect(requiredIds(visibleSections([]))).toEqual([
       "departament",
+      "editii",
       "stare_cuvinte",
+      "s_sustinere",
+      "s_epuizare",
+      "revenire",
       "volum",
+      "program_taie",
+      "s_program",
+      "moment_zi",
       "s_claritate",
+      "claritate_de_ce",
       "top3",
+      "zona_bine",
+      "zona_prost",
       "s_general",
     ]);
+  });
+
+  it("lasă opțional textul lung și pagina de detaliu", () => {
+    const optionale = SECTIONS.flatMap((s) =>
+      s.questions.filter((q) => !q.required).map((q) => q.id),
+    );
+    for (const id of ["nume", "moment_bun", "moment_greu", "nefacut", "recomanzi", "orice", "zone"])
+      expect(optionale, `${id} ar trebui să rămână opțional`).toContain(id);
   });
 
   it("nu cere rolul, ca numele opțional să însemne ceva", () => {

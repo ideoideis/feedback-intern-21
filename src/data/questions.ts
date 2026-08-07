@@ -561,6 +561,7 @@ export const SECTIONS: Section[] = [
         id: "editii",
         label: "A câta ediție a fost pentru tine?",
         options: ["prima", "a doua", "a treia", "mai multe"],
+        required: true,
       },
     ],
   },
@@ -595,6 +596,7 @@ export const SECTIONS: Section[] = [
         label: "Când ți-a fost greu, te-ai simțit susținut/ă?",
         low: "am fost pe cont propriu",
         high: "am avut sprijin imediat",
+        required: true,
       },
       {
         type: "scale",
@@ -602,6 +604,7 @@ export const SECTIONS: Section[] = [
         label: "Cu cât ai terminat festivalul, ca energie?",
         low: "pe jantă",
         high: "încă aveam benzină",
+        required: true,
       },
       {
         type: "choice",
@@ -609,6 +612,7 @@ export const SECTIONS: Section[] = [
         label: "Ai vrea să revii în echipă la #22?",
         help: "Dacă vrei să explici, scrie la ultima întrebare din formular.",
         options: ["da", "da, dar în alt rol", "nu știu încă", "probabil nu"],
+        required: true,
       },
     ],
   },
@@ -633,6 +637,7 @@ export const SECTIONS: Section[] = [
         slots: 2,
         accent: "change",
         placeholder: "ex. un eveniment care se suprapunea",
+        required: true,
       },
       {
         type: "scale",
@@ -640,6 +645,7 @@ export const SECTIONS: Section[] = [
         label: "Ai știut la timp programul și schimbările de ultim moment?",
         low: "aflam pe ultima sută",
         high: "știam mereu",
+        required: true,
       },
       {
         type: "long",
@@ -658,6 +664,7 @@ export const SECTIONS: Section[] = [
           "noaptea, la demontat",
           "nu se rupea",
         ],
+        required: true,
       },
       {
         type: "long",
@@ -710,6 +717,7 @@ export const SECTIONS: Section[] = [
         id: "claritate_de_ce",
         label: "De ce ai dat nota asta?",
         help: "Dacă a fost un moment în care n-ai știut cine decide sau cine face, scrie-l aici.",
+        required: true,
       },
     ],
   },
@@ -760,11 +768,13 @@ export const SECTIONS: Section[] = [
         id: "zona_bine",
         label: "Care zonă a festivalului a mers cel mai bine?",
         help: "Din tot ce ai văzut, nu doar din ce ai lucrat.",
+        required: true,
       },
       {
         type: "short",
         id: "zona_prost",
         label: "Care a mers cel mai prost?",
+        required: true,
       },
       {
         type: "scale",

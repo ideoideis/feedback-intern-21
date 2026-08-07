@@ -346,7 +346,7 @@ export default function Index() {
             {[
               "Durează aproximativ 10 minute.",
               "Se salvează singur pe telefonul sau laptopul de pe care completezi, deci poți închide pagina și continua de pe același dispozitiv.",
-              "Numele e opțional. În afară de câteva întrebări, restul e opțional.",
+              "Numele e opțional. Notele și răspunsurile scurte le cerem la toate, textul lung îl scrii doar dacă ai ce.",
             ].map((t) => (
               <li key={t} className="flex gap-3">
                 <Check className="mt-1 h-4 w-4 flex-none text-primary" strokeWidth={3} />
