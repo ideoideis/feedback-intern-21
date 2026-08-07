@@ -3,8 +3,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHearts } from "@/components/Hearts";
+import { toast } from "sonner";
 import { ZONES, gridRowsFor, gridRowsRest, type Question, type ZoneId } from "@/data/questions";
-import { HAPPY_WORDS, SCALE_REACTIONS, WORD_REACTIONS } from "@/data/reactions";
+import {
+  CHOICE_REACTIONS,
+  HAPPY_CHOICES,
+  HAPPY_WORDS,
+  SCALE_REACTIONS,
+  WORD_REACTIONS,
+} from "@/data/reactions";
 
 export type AnswerValue = string | number | string[] | Record<string, number | "nu">;
 export type Answers = Record<string, AnswerValue>;
@@ -34,16 +41,18 @@ export function AutoTextarea({
   value,
   onChange,
   placeholder,
+  placeholders,
   invalid,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** Sugestii care se rotesc, pentru câmpurile complet deschise. */
+  placeholders?: string[];
   invalid?: boolean;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const hearts = useHearts();
-  const praised = useRef(false);
+  const [hint, setHint] = useState(0);
   const long = value.length > 220;
 
   useEffect(() => {
@@ -53,20 +62,20 @@ export function AutoTextarea({
     el.style.height = `${Math.max(el.scrollHeight, 96)}px`;
   }, [value]);
 
+  // Easter egg: sugestiile se schimbă singure, cât timp câmpul e gol.
+  useEffect(() => {
+    if (!placeholders?.length || value.length > 0) return;
+    const t = window.setInterval(() => setHint((i) => (i + 1) % placeholders.length), 3800);
+    return () => window.clearInterval(t);
+  }, [placeholders, value.length]);
+
   return (
     <>
       <textarea
         ref={ref}
         value={value}
-        onChange={(e) => {
-          // Easter egg: cine scrie pe larg merită să audă că e citit.
-          if (e.target.value.length > 220 && !praised.current) {
-            praised.current = true;
-            hearts.burstFrom(e.currentTarget, 4);
-          }
-          onChange(e.target.value);
-        }}
-        placeholder={placeholder ?? "scrie aici..."}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholders?.length ? placeholders[hint] : (placeholder ?? "scrie aici...")}
         rows={3}
         className={cn(
           "w-full resize-none border bg-background px-4 py-3 text-base leading-relaxed",
@@ -74,6 +83,7 @@ export function AutoTextarea({
           invalid ? "border-primary" : "border-input",
         )}
       />
+      {/* Fără inimioare aici: se scrie pe larg și la momentele grele. */}
       <Reaction text={long ? "scrii pe larg. chiar citim tot, promitem." : undefined} />
     </>
   );
@@ -141,35 +151,46 @@ function Scale({
 
 /** Variante pe un rând, ca niște pastile. */
 function Choice({
+  id,
   options,
   value,
   onChange,
 }: {
+  id: string;
   options: string[];
   value: string | undefined;
   onChange: (v: string) => void;
 }) {
+  const hearts = useHearts();
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((o) => {
-        const active = value === o;
-        return (
-          <button
-            key={o}
-            type="button"
-            onClick={() => onChange(o)}
-            aria-pressed={active}
-            className={cn(
-              "border px-5 py-2.5 text-sm font-medium transition-colors",
-              active
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-input bg-background hover:border-primary hover:text-primary",
-            )}
-          >
-            {o}
-          </button>
-        );
-      })}
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => {
+          const active = value === o;
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={(e) => {
+                onChange(o);
+                // Inimioare doar la variantele bune.
+                if (HAPPY_CHOICES.includes(o)) hearts.burstFrom(e.currentTarget, 5);
+              }}
+              aria-pressed={active}
+              className={cn(
+                "border px-5 py-2.5 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-input bg-background hover:border-primary hover:text-primary",
+              )}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+      <Reaction text={value ? CHOICE_REACTIONS[id]?.[value] : undefined} />
     </div>
   );
 }
@@ -201,10 +222,12 @@ function Words({
     if (full) return;
     onChange([...value, w]);
     setLast(w);
-    // Al treilea cuvânt merită inimioare oricare ar fi el.
-    if (value.length + 1 === max) hearts.burstFrom(el, 8);
-    else if (HAPPY_WORDS.includes(w)) hearts.burstFrom(el, 5);
+    // Inimioare doar la cuvintele bune. Nu sărbătorim că cineva s-a simțit
+    // frustrat sau copleșit, nici măcar când completează ultimul cuvânt.
+    if (HAPPY_WORDS.includes(w)) hearts.burstFrom(el, 5);
   };
+
+  const anyHard = value.some((w) => !HAPPY_WORDS.includes(w));
 
   return (
     <div>
@@ -232,7 +255,11 @@ function Words({
         })}
       </div>
       <p className={cn("mt-2 text-xs", full ? "font-medium text-primary" : "text-muted-foreground")}>
-        {full ? `${max} din ${max}. portret complet.` : `${value.length} din ${max} alese`}
+        {full
+          ? anyHard
+            ? "am înțeles. mulțumim că ai fost sincer/ă."
+            : `${max} din ${max}. portret complet.`
+          : `${value.length} din ${max} alese`}
       </p>
       <Reaction text={last ? WORD_REACTIONS[last] : undefined} />
     </div>
@@ -271,8 +298,9 @@ function Items({
       celebrated.current.add(i);
       hearts.burstFrom(el, 4);
     }
-    // Și un puf mai mare când s-au completat toate rândurile.
-    if (!fullHouse.current && next.every((r) => r.trim().length > 0)) {
+    // Și un puf mai mare când s-au completat toate rândurile. Doar la listele de
+    // păstrat și la topul ordonat: pe o listă de nemulțumiri n-avem ce sărbători.
+    if (!fullHouse.current && (accent === "keep" || ranked) && next.every((r) => r.trim().length > 0)) {
       fullHouse.current = true;
       hearts.burstFrom(el, 9);
     }
@@ -304,11 +332,13 @@ function Items({
       ))}
       <Reaction
         text={
-          allFilled
-            ? ranked
-              ? "trei din trei, în ordine. exact ce ne trebuia."
-              : "toate trei. mulțumim."
-            : undefined
+          !allFilled
+            ? undefined
+            : ranked
+              ? `${slots} din ${slots}, în ordine. exact ce ne trebuia.`
+              : accent === "keep"
+                ? "bine de știut ce ținem."
+                : undefined
         }
       />
     </div>
@@ -441,8 +471,12 @@ function ZonePicker({
   onChange: (v: ZoneId[]) => void;
   invalid?: boolean;
 }) {
-  const toggle = (id: ZoneId) =>
-    onChange(value.includes(id) ? value.filter((z) => z !== id) : [...value, id]);
+  const toggle = (id: ZoneId) => {
+    const next = value.includes(id) ? value.filter((z) => z !== id) : [...value, id];
+    onChange(next);
+    // Easter egg pentru cine chiar a fost peste tot.
+    if (next.length === ZONES.length) toast("ai bifat tot. ai dormit vreodată?");
+  };
 
   return (
     <div className={cn("grid gap-2 sm:grid-cols-2", invalid && "ring-2 ring-primary ring-offset-4")}>
@@ -503,13 +537,25 @@ export function Field({
 
       <div className="mt-4">
         {q.type === "short" && (
-          <input
-            type="text"
-            value={(raw as string) ?? ""}
-            onChange={(e) => set(q.id, e.target.value)}
-            placeholder={q.placeholder}
-            className={inputClass(!!error)}
-          />
+          <>
+            <input
+              type="text"
+              value={(raw as string) ?? ""}
+              onChange={(e) => set(q.id, e.target.value)}
+              placeholder={q.placeholder}
+              className={inputClass(!!error)}
+            />
+            {/* Easter egg: dacă își scrie numele, îl salutăm. */}
+            {q.greet && (
+              <Reaction
+                text={
+                  ((raw as string) ?? "").trim().length > 1
+                    ? `salut, ${((raw as string) ?? "").trim().split(/\s+/)[0]}.`
+                    : undefined
+                }
+              />
+            )}
+          </>
         )}
 
         {q.type === "long" && (
@@ -517,6 +563,7 @@ export function Field({
             value={(raw as string) ?? ""}
             onChange={(v) => set(q.id, v)}
             placeholder={q.placeholder}
+            placeholders={q.placeholders}
             invalid={!!error}
           />
         )}
@@ -533,7 +580,12 @@ export function Field({
         )}
 
         {q.type === "choice" && (
-          <Choice options={q.options} value={raw as string | undefined} onChange={(v) => set(q.id, v)} />
+          <Choice
+            id={q.id}
+            options={q.options}
+            value={raw as string | undefined}
+            onChange={(v) => set(q.id, v)}
+          />
         )}
 
         {q.type === "words" && (

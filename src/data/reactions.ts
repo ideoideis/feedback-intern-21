@@ -71,7 +71,13 @@ export const WORD_REACTIONS: Record<string, string> = {
   "în locul potrivit": "atunci te vrem și la #22.",
 };
 
-/** Cuvintele la care iese un puf de inimioare. */
+/**
+ * Cuvintele la care iese un puf de inimioare.
+ *
+ * Regula, pe care merită să n-o încalci când adaugi cuvinte: inimioare doar la
+ * cuvintele bune. Nu sărbătorim că cineva s-a simțit frustrat, copleșit sau
+ * invizibil, oricât de drăguț ar fi efectul.
+ */
 export const HAPPY_WORDS = [
   "energizat/ă",
   "util/ă",
@@ -81,6 +87,25 @@ export const HAPPY_WORDS = [
   "conectat/ă cu echipa",
   "în locul potrivit",
 ];
+
+/** Reacție la varianta aleasă, pentru întrebările cu pastile. */
+export const CHOICE_REACTIONS: Record<string, Record<string, string>> = {
+  editii: {
+    prima: "bine ai venit în echipă.",
+    "a doua": "deci te-ai întors. semn bun.",
+    "a treia": "începi să fii dintre cei vechi.",
+    "mai multe": "veteran/ă. mulțumim că mai vii.",
+  },
+  revenire: {
+    da: "ne bucurăm. serios.",
+    "da, dar în alt rol": "notat. hai să vorbim despre unde.",
+    "nu știu încă": "e un răspuns cinstit. mulțumim.",
+    "probabil nu": "am înțeles. mulțumim că ai spus-o direct.",
+  },
+};
+
+/** Variantele la care merg inimioarele. Restul primesc doar text. */
+export const HAPPY_CHOICES = ["prima", "a doua", "a treia", "mai multe", "da", "da, dar în alt rol"];
 
 /** Rândul de încurajare la trecerea prin secțiuni (după numărul secțiunii). */
 export const MILESTONES: Record<number, string> = {

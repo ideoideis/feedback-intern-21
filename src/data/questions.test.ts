@@ -31,21 +31,34 @@ describe("secțiunile care se arată", () => {
   });
 
   it("arată secțiunea evenimentului propriu și pentru gale, și pentru alte evenimente", () => {
-    expect(ids(["gale"])).toContain("evenimente");
-    expect(ids(["evenimente"])).toContain("evenimente");
-    expect(ids(["comunicare"])).not.toContain("evenimente");
+    expect(ids(["gale"])).toContain("ev");
+    expect(ids(["evenimente"])).toContain("ev");
+    expect(ids(["comunicare"])).not.toContain("ev");
   });
 
-  it("dă departamentului de comunicare o secțiune a lui", () => {
-    expect(ids(["comunicare"])).toContain("comunicare_dept");
-    expect(ids(["piata"])).not.toContain("comunicare_dept");
+  it("dă fiecărui departament o secțiune a lui", () => {
+    expect(ids(["comunicare"])).toContain("com");
+    expect(ids(["voluntari"])).toContain("vol");
+    expect(ids(["parteneri"])).toContain("part");
+    expect(ids(["oras"])).toContain("oras");
+    expect(ids(["trupe"])).toContain("trupe");
+    expect(ids(["invitati"])).toContain("invitati");
+    expect(ids(["piata"])).not.toContain("com");
   });
 
-  it("nu întreabă de logistică pe cine n-a lucrat pe teren", () => {
+  it("nu întreabă de logistică pe cine n-a lucrat pe ea", () => {
     // Cine face foto-video nu are ce să spună despre montaj și transport.
-    expect(ids(["comunicare"])).not.toContain("locatii");
-    expect(ids(["logistica"])).toContain("locatii");
-    expect(ids(["piata"])).toContain("locatii");
+    expect(ids(["comunicare"])).not.toContain("loc");
+    expect(ids(["logistica"])).toContain("loc");
+    expect(ids(["cazare"])).toContain("loc");
+  });
+
+  it("acoperă zonele mari ale festivalului cu o secțiune fiecare", () => {
+    // Toate zonele bifabile, în afară de "altceva", duc undeva.
+    const toate = ids(ZONES.map((z) => z.id));
+    for (const z of ZONES.filter((z) => z.id !== "altele"))
+      expect(toate.length, `zona ${z.id}`).toBeGreaterThan(ids([]).length);
+    expect(ids(["altele"])).toEqual(ids([]));
   });
 
   it("arată tot cuiva care a bifat toate zonele", () => {
@@ -84,11 +97,18 @@ describe("răspunsuri care se pot număra", () => {
     }
   });
 
-  it("listele au același număr de rânduri, ca să fie comparabile între zone", () => {
-    const slots = SECTIONS.flatMap((s) =>
+  it("listele pe zone au același număr de rânduri, ca să fie comparabile", () => {
+    const slots = zoneSections.flatMap((s) =>
       s.questions.filter((q) => q.type === "items").map((q) => (q.type === "items" ? q.slots : 0)),
     );
-    expect(new Set(slots)).toEqual(new Set([3]));
+    expect(new Set(slots)).toEqual(new Set([2]));
+  });
+
+  it("fiecare secțiune de zonă are și un câmp liber, pentru ce nu încape în liste", () => {
+    for (const s of zoneSections) {
+      const open = s.questions.filter((q) => q.type === "long");
+      expect(open.length, `secțiunea ${s.id}`).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it("grila acoperă tot festivalul, nu doar zonele de lucru", () => {
@@ -112,7 +132,7 @@ describe("răspunsuri care se pot număra", () => {
 
   it("lasă pentru toată lumea doar ce a trăit toată lumea", () => {
     const oricine = gridRowsFor([]).map((r) => r.id);
-    expect(oricine).toEqual(["cazare", "coordonare", "atmosfera"]);
+    expect(oricine).toEqual(["trupe", "cazare", "coordonare", "atmosfera"]);
   });
 
   it("restul zonelor rămân disponibile sub buton, fără dubluri", () => {
@@ -137,8 +157,10 @@ describe("lungimea formularului", () => {
     expect(fieldCount(["comunicare"])).toBeLessThanOrEqual(30);
   });
 
-  it("nu depășește un formular de un sfert de oră nici pentru cine a fost în tot", () => {
-    expect(fieldCount(ZONES.map((z) => z.id))).toBeLessThanOrEqual(50);
+  it("crește rezonabil chiar și pentru cine a bifat toate zonele", () => {
+    // Cazul extrem: cine a fost peste tot răspunde despre tot, dar tot din
+    // câmpuri scurte. Dacă cifra asta crește mult, taie ceva.
+    expect(fieldCount(ZONES.map((z) => z.id))).toBeLessThanOrEqual(60);
   });
 
   it("crește doar cu zonele bifate", () => {

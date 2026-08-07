@@ -9,6 +9,11 @@
 --   7      grila pe tot festivalul (unde s-a văzut prost din mai multe unghiuri)
 --   8, 9   oamenii: stare, epuizare, cine nu mai vrea să revină
 --   10+    text pe întrebări, pentru citit pe îndelete
+--
+-- Pentru Excel nu folosi interogările de aici: ai o vedere gata făcută,
+-- `feedback_intern_21_excel` (vezi migrations/002_export_excel.sql). O deschizi
+-- în Table Editor si dai Export -> CSV, o linie per om, coloane cu nume în
+-- română. Interogările de mai jos sunt pentru citit și grupat, nu pentru export.
 
 -- ── 1. Câte răspunsuri avem ───────────────────────────────────────────────
 select count(*) as raspunsuri,
@@ -45,9 +50,14 @@ order by oameni desc;
 select case when a.key like '%\_keep' then 'păstrăm' else 'schimbăm' end as tip,
        case split_part(a.key, '_', 1)
          when 'piata'    then 'Piața'
+         when 'trupe'    then 'trupele și participanții'
          when 'ateliere' then 'atelierele'
+         when 'invitati' then 'invitați, mentori, juriu'
          when 'ev'       then 'evenimente proprii'
          when 'com'      then 'comunicare și promovare'
+         when 'vol'      then 'voluntari'
+         when 'part'     then 'parteneri și finanțare'
+         when 'oras'     then 'orașul și instituțiile'
          when 'loc'      then 'locații și logistică'
          else split_part(a.key, '_', 1)
        end as zona,

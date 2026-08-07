@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase, FEEDBACK_TABLE } from "@/lib/supabase";
 import { useHearts } from "@/components/Hearts";
 import { Field, type AnswerValue, type Answers } from "@/components/fields";
-import { fieldCount, visibleSections, type Section, type ZoneId } from "@/data/questions";
+import { visibleSections, type Section, type ZoneId } from "@/data/questions";
 import { MILESTONES } from "@/data/reactions";
 import etichetaLogo from "@/assets/eticheta-ideoideis.png";
 
@@ -65,6 +65,8 @@ export default function Index() {
   const [milestone, setMilestone] = useState<string | null>(null);
   const navRef = useRef<HTMLButtonElement>(null);
   const backCount = useRef(0);
+  const heartClicks = useRef(0);
+  const thanksClicks = useRef(0);
 
   // Ciorna stă în browserul de pe care se completează. Nu are nevoie de nume:
   // cine începe pe telefon își găsește răspunsurile pe același telefon, fără
@@ -104,6 +106,11 @@ export default function Index() {
         }
         return;
       }
+      // Un indiciu pentru cine bâjbâie după easter eggs.
+      if (e.key === "?") {
+        toast("apasă ♥ din bara de sus, scrie ideo, sau încearcă săgețile.");
+        return;
+      }
       if (e.key.length !== 1) return;
       letters = (letters + e.key.toLowerCase()).slice(-5);
       if (letters.endsWith("ideo")) {
@@ -119,8 +126,6 @@ export default function Index() {
   const zone = (answers.zone as ZoneId[]) ?? [];
   const sections = useMemo(() => visibleSections(zone), [zone]);
   const section: Section | undefined = sections[step];
-  // Estimare onestă, nu o cifră inventată: ~20 de secunde per câmp.
-  const minutes = Math.max(5, Math.round((fieldCount(zone) * 20) / 60));
 
   const set = (id: string, v: AnswerValue) => setAnswers((a) => ({ ...a, [id]: v }));
 
@@ -227,9 +232,14 @@ export default function Index() {
         <p className="mt-4 max-w-xl text-sm text-muted-foreground">
           Dacă îți mai vine ceva în minte peste două zile, scrie-ne oricând.
         </p>
+        {/* Easter egg final: cu cât insiști, cu atât se întâmplă mai mult. */}
         <button
           type="button"
-          onClick={(e) => hearts.burstFrom(e.currentTarget, 12)}
+          onClick={(e) => {
+            thanksClicks.current += 1;
+            if (thanksClicks.current === 10) toast("gata, ajunge. mergi să te odihnești ♥");
+            hearts.burstFrom(e.currentTarget, 6 + thanksClicks.current * 3);
+          }}
           className="mt-10 text-3xl text-primary transition-transform hover:scale-125"
           aria-label="inimioare"
         >
@@ -268,8 +278,7 @@ export default function Index() {
 
           <ul className="mt-10 space-y-3 border-t border-border pt-8 text-base">
             {[
-              "Cam 10 minute. Mai puțin, dacă ai fost implicat/ă în puține zone.",
-              "Nu te întrebăm despre zone în care n-ai fost. Departamentele sunt diferite, nimeni nu a văzut tot.",
+              "Durează 5 la 10 minute.",
               "Se salvează singur pe telefonul sau laptopul de pe care completezi, deci poți închide pagina și continua de pe același dispozitiv.",
               "Numele e opțional. În afară de câteva întrebări, restul e opțional.",
             ].map((t) => (
@@ -320,7 +329,7 @@ export default function Index() {
       <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
         <div className="h-1 w-full bg-muted">
           <motion.div
-            className="h-full bg-primary"
+            className={cn("h-full bg-primary", isLast && "animate-pulse")}
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.35, ease: "easeOut" }}
@@ -356,10 +365,19 @@ export default function Index() {
             )}
           </AnimatePresence>
 
-          {/* Easter egg la vedere: se apasă oricând, oricât. */}
+          {/* Easter egg la vedere: se apasă oricând, oricât. La a cincea apăsare
+              se lasă convins și plouă. */}
           <button
             type="button"
-            onClick={(e) => hearts.burstFrom(e.currentTarget, 6)}
+            onClick={(e) => {
+              heartClicks.current += 1;
+              if (heartClicks.current === 5) {
+                hearts.rain(34);
+                toast("ok, ne-am prins că-ți place ♥");
+              } else {
+                hearts.burstFrom(e.currentTarget, 6);
+              }
+            }}
             aria-label="inimioare"
             className="text-primary transition-transform hover:scale-125"
           >
@@ -406,13 +424,6 @@ export default function Index() {
               ))}
             </div>
 
-            {/* Pe prima secțiune, imediat după bife, arătăm cum arată drumul. */}
-            {section?.id === "tine" && zone.length > 0 && (
-              <p className="mt-8 border-l-2 border-primary bg-primary/5 p-4 text-sm leading-relaxed">
-                Formularul tău are {sections.length} secțiuni, cam {minutes} minute:{" "}
-                {sections.map((s) => s.title).join(", ")}.
-              </p>
-            )}
           </motion.div>
         </AnimatePresence>
       </div>
