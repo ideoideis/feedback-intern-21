@@ -104,7 +104,6 @@ select
   nullif(trim(f.answers -> 'top3' ->> 0), '')     as "Top 1",
   nullif(trim(f.answers -> 'top3' ->> 1), '')     as "Top 2",
   nullif(trim(f.answers -> 'top3' ->> 2), '')     as "Top 3",
-  f.answers ->> 'idee'                            as "Idee nouă",
 
   -- per ansamblu
   f.answers ->> 'zona_bine'                       as "Zona care a mers cel mai bine",

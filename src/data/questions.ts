@@ -703,33 +703,22 @@ export const SECTIONS: Section[] = [
   },
 
   {
-    id: "idei",
-    title: "ce schimbăm la #22",
+    // Un singur final, nu două. Înainte erau "ce schimbăm la #22" și "note de
+    // final" una după alta, cu aceeași senzație de încheiere de două ori.
+    id: "final",
+    title: "la final",
     questions: [
       {
         type: "items",
         id: "top3",
         label: "Dacă la #22 s-ar schimba doar trei lucruri, care ar fi?",
-        help: "În ordinea importanței, cel mai important primul. Poate fi și ceva scris mai sus, dacă e cel mai important.",
+        help: "În ordinea importanței, cel mai important primul. Poate fi o reparație, dar și o idee nouă, sau ceva din pregătirea de dinainte.",
         slots: 3,
         ranked: true,
         accent: "change",
         placeholder: "ex. cine decide pe teren",
         required: true,
       },
-      {
-        type: "long",
-        id: "idee",
-        label: "Ce idee nouă ai propune pentru #22?",
-        help: "Orice: un format, un eveniment, o regulă internă, un fel de a lucra. Dacă e o idee de care te-ai ocupa chiar tu, scrie și asta.",
-      },
-    ],
-  },
-
-  {
-    id: "final",
-    title: "note de final",
-    questions: [
       {
         type: "short",
         id: "zona_bine",

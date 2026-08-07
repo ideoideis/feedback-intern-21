@@ -20,7 +20,8 @@ const allQuestions = SECTIONS.flatMap((s) => s.questions);
 
 describe("secțiunile care se arată", () => {
   it("arată doar secțiunile comune când nu e bifat nimic", () => {
-    expect(ids([])).toEqual(["tine", "stare", "program", "echipa", "idei", "final"]);
+    // Un singur final: "ce schimbăm la #22" a fost topit în "la final".
+    expect(ids([])).toEqual(["tine", "stare", "program", "echipa", "final"]);
   });
 
   it("fiecare direcție bifată aduce exact o secțiune, a ei", () => {
