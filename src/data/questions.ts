@@ -540,7 +540,6 @@ export const SECTIONS: Section[] = [
   {
     id: "tine",
     title: "despre tine",
-    intro: "Nu întrebăm rolul, fiindcă rolul înseamnă un singur om. Numele e opțional.",
     questions: [
       {
         type: "short",
