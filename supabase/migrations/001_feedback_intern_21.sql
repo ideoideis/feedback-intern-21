@@ -57,5 +57,24 @@ create policy "Authenticated can read feedback intern 21"
   to authenticated
   using (true);
 
+-- Drepturile de tabel, pe lângă politici. Supabase le dă implicit la tabelele
+-- noi, dar dacă proiectul a fost configurat altfel, formularul ar primi
+-- "permission denied" chiar și cu politica de mai sus. Costă nimic să fim expliciți.
+grant insert on public.feedback_intern_21 to anon, authenticated;
+grant select on public.feedback_intern_21 to authenticated;
+
 create index if not exists feedback_intern_21_created_at_idx
   on public.feedback_intern_21 (created_at desc);
+
+-- Verificare, la finalul rulării: dacă lipsește politica de inserare, nimeni nu
+-- poate trimite formularul, iar eroarea se vede abia când apeși "trimite".
+do $$
+declare n int;
+begin
+  select count(*) into n from pg_policies
+  where schemaname = 'public' and tablename = 'feedback_intern_21' and cmd = 'INSERT';
+  if n = 0 then
+    raise exception 'Politica de INSERT lipsește: formularul nu ar putea trimite nimic.';
+  end if;
+  raise notice 'OK: % politici de inserare, formularul poate trimite.', n;
+end $$;
